@@ -7,18 +7,17 @@ class Game:
 	LENGTH = 12
 	INVALID = -1
 	PIECES = 10
+	GAMEOVER = false
 	def __init__(self):
 		self.board = create_board()
 		self.player_turn = 1
 		self.player_one_pieces = __initialize_pieces(PLAYER_ONE)
 		self.player_two_pieces = __initialize_pieces(PLAYER_TWO)
 	def __initialize_pieces(self, player_id):
-		pieces = []
 		if (player_id == PLAYER_ONE):
-			pieces = [ [0, 6], [1, 6], [1, 7], [2, 5],[2,6],[2,7],[3,5], [3,6], [3,7], [3,8]]
+			return [ [0, 6], [1, 6], [1, 7], [2, 5],[2,6],[2,7],[3,5], [3,6], [3,7], [3,8] ]
 		else:
-			pieces = [[16,6],[15,6],[15,7],[14,5],[14,6],[14,7],[13,5],[13,6],[13,7],[13,8]]
-		return pieces
+			return [ [16, 6], [15, 6], [15, 7], [14, 5], [14, 6], [14, 7], [13, 5], [13, 6], [13, 7], [13, 8] ]
 	def create_board_line(start, end, value):
 		row = []
 		for i in LENGTH:
@@ -51,6 +50,8 @@ class Game:
 		while not __game_over():
 			__move()
 			__save_state()
+		GAMEOVER = true
+		__save_state()
 
 	def __move(self):
 		id_piece, new_pos = __calculate_random_move()
@@ -77,7 +78,21 @@ class Game:
 				i += 1
 		return i == PIECES
 	def __save_state():
+		now = datetime.datetime.now()
+		name = "snapshots-" + str(now) + ".txt"
 		
+		file = open(name, "a")
+
+		line = "" + "-" + "" + "-" + "" + "-" + "\n"
+		file.write(line)
+
+		if GAMEOVER:
+			winner = self.player_turn % 2
+			line = str(winner) + "\n"
+			file.write(line)
+		
+		file.close()
+
 	def __calculate_random_move(self):
   		piece = random.randint(0,9)
 
