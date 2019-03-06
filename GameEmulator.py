@@ -53,8 +53,8 @@ class Game:
 			__save_state()
 
 	def __move(self):
-		id_piece, new_pos = __calculate_move()
-		if (player_turn == 1):
+		id_piece, new_pos = __calculate_random_move()
+		if (player_turn == PLAYER_ONE):
 			old_pos = self.player_one_pieces[id_piece]
 			self.player_one_pieces[id_piece] = new_pos
 
@@ -77,10 +77,48 @@ class Game:
 				i += 1
 		return i == PIECES
 	def __save_state():
+		
 	def __calculate_random_move(self):
   		piece = random.randint(0,9)
 
+  		if self.player_turn == PLAYER_ONE:
+  			actual_pos = self.player_one_pieces[piece]
+  		else:
+  			actual_pos = self.player_two_pieces[piece]
+
+  		possible_moves = 0
+
+  		for i in range(actual_pos[0] -1,actual_pos[0] -1):
+  				for j in range(actual_pos[1] -1, actual_pos[1]-1):
+  					if (self.board[i][j] == EMPTY and j != actual_pos[1]):
+  						possible_moves += 1
+
+  		selected_move = random.randint(1,possible_moves)
   		
+  		if self.player_turn == PLAYER_ONE:
+  			new_pos = self.player_one_pieces[piece]
+  		else:
+  			new_pos = self.player_two_pieces[piece]
+
+  		if selected_move == 1:
+  			new_pos = [new_pos[0] - 1, new_pos[1] - 1]
+  		elif selected_move == 2:
+  			new_pos = [new_pos[0] - 1, new_pos[1] + 1]
+  		elif selected_move == 3:
+  			new_pos = [new_pos[0], new_pos[1] - 1]
+  		elif selected_move == 4:
+  			new_pos = [new_pos[0], new_pos[1] + 1]
+  		elif selected_move == 5:
+  			new_pos = [new_pos[0] + 1, new_pos[1] - 1]
+  		elif selected_move == 6:
+  			new_pos = [new_pos[0] + 1, new_pos[1] + 1]
+  		return (pos, new_pos)
+
+
+
+
+
+
 
 
 
