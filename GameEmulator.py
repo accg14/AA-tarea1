@@ -4,6 +4,10 @@ class Game:
 	PLAYER_ONE = 1
 	PLAYER_TWO = 2
 	EMPTY = 0
+	XMAX = 16
+	XMIN = 0
+	YMAX = 12
+	YMIN = 0 
 	LENGTH = 12
 	INVALID = -1
 	PIECES = 10
@@ -101,34 +105,33 @@ class Game:
   		else:
   			actual_pos = self.player_two_pieces[piece]
 
-  		possible_moves = 0
+  		possible_moves = []
 
-  		for i in range(actual_pos[0] -1,actual_pos[0] -1):
-  				for j in range(actual_pos[1] -1, actual_pos[1]-1):
-  					if (self.board[i][j] == EMPTY and j != actual_pos[1]):
-  						possible_moves += 1
+  		for i in range(actual_pos[0] - 1,actual_pos[0] + 1):
+  				if i in range(XMIN,XMAX):
+  					for j in range(actual_pos[1] -1, actual_pos[1]-1):
+  						if j in range(YMIN,YMAX):
+  							if (self.board[i][j] == EMPTY and j != actual_pos[1]):
+  								possible_moves.append(i)
 
-  		selected_move = random.randint(1,possible_moves)
-  		
-  		if self.player_turn == PLAYER_ONE:
-  			new_pos = self.player_one_pieces[piece]
+  		if len(possible_moves):
+  			selected_move = possible_moves[random.randint(0, len(possible_moves) - 1)]
+
+  			if selected_move == 1:
+  				new_pos = [actual_pos[0] - 1, actual_pos[1] - 1]
+  			elif selected_move == 2:
+  				new_pos = [actual_pos[0] - 1, actual_pos[1]]
+  			elif selected_move == 3:
+  				new_pos = [actual_pos[0], actual_pos[1] - 1]
+  			elif selected_move == 4:
+  				new_pos = [actual_pos[0], actual_pos[1] + 1]
+  			elif selected_move == 5:
+  				new_pos = [actual_pos[0] + 1, actual_pos[1] ]
+  			elif selected_move == 6:
+  				new_pos = [actual_pos[0] + 1, actual_pos[1] + 1]
+  			return (pos, new_pos)
   		else:
-  			new_pos = self.player_two_pieces[piece]
-
-  		if selected_move == 1:
-  			new_pos = [new_pos[0] - 1, new_pos[1] - 1]
-  		elif selected_move == 2:
-  			new_pos = [new_pos[0] - 1, new_pos[1] + 1]
-  		elif selected_move == 3:
-  			new_pos = [new_pos[0], new_pos[1] - 1]
-  		elif selected_move == 4:
-  			new_pos = [new_pos[0], new_pos[1] + 1]
-  		elif selected_move == 5:
-  			new_pos = [new_pos[0] + 1, new_pos[1] - 1]
-  		elif selected_move == 6:
-  			new_pos = [new_pos[0] + 1, new_pos[1] + 1]
-  		return (pos, new_pos)
-
+  			
 
 
 
