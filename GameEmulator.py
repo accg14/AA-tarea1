@@ -1,153 +1,159 @@
 import random
 
 class Game:
+	GAME_OVER = False
+
 	PLAYER_ONE = 1
 	PLAYER_TWO = 2
+
 	EMPTY = 0
-	XMAX = 16
-	XMIN = 0
-	YMAX = 12
-	YMIN = 0 
-	LENGTH = 12
 	INVALID = -1
 	PIECES = 10
-	GAMEOVER = false
+
+	X_MAX = 17
+	X_MIN = -1
+	Y_MAX = 13
+	Y_MIN = -1
+
 	def __init__(self):
-		self.board = create_board()
+		self.board = self.create_board()
 		self.player_turn = 1
-		self.player_one_pieces = __initialize_pieces(PLAYER_ONE)
-		self.player_two_pieces = __initialize_pieces(PLAYER_TWO)
-	def __initialize_pieces(self, player_id):
-		if (player_id == PLAYER_ONE):
-			return [ [0, 6], [1, 6], [1, 7], [2, 5],[2,6],[2,7],[3,5], [3,6], [3,7], [3,8] ]
-		else:
-			return [ [16, 6], [15, 6], [15, 7], [14, 5], [14, 6], [14, 7], [13, 5], [13, 6], [13, 7], [13, 8] ]
-	def create_board_line(start, end, value):
+		self.players_pieces = self.initialize_players_pieces()
+
+	def initialize_players_pieces(self):
+		players_pieces = []
+		players_pieces.append([])
+		players_pieces.append([[0,6], [1,6], [1,7], [2,5], [2,6], [2,7], [3,5], [3,6], [3,7], [3,8]])
+		players_pieces.append([[16,6], [15,6], [15,7], [14,5], [14,6], [14,7], [13,5], [13,6], [13,7], [13,8]])
+		return players_pieces
+
+	def create_board_line(self, start, end, value):
 		row = []
-		for i in LENGTH:
+		for i in range(self.Y_MAX):
 			if i in range(start, end):
-				row[i] = value
+				row.append(value)
 			else:
-				row[i] = INVALID
+				row.append(self.INVALID)
 		return row
-	def create_board:
+
+	def create_board(self):
 		board = []
-		board[0] = create_board_line(6,6,PLAYER_ONE)
-		board[1] = create_board_line(6,7, PLAYER_ONE)
-		board[2] = create_board_line(5,7,PLAYER_ONE)
-		board[3] = create_board_line(5,8,PLAYER_ONE)
-		board[4] = create_board_line(0,12, EMPTY)
-		board[5] = create_board_line(1,12, EMPTY)
-		board[6] = create_board_line(1,11, EMPTY)
-		board[7] = create_board_line(2,11, EMPTY)
-		board[8] = create_board_line(2,10, EMPTY)
-		board[9] = board[7]
-		board[10] = board[6]
-		board[11] = board[5]
-		board[12] = board[4]
-		board[13] = create_board_line(5,6, PLAYER_TWO)
-		board[14] = create_board_line(5,7, PLAYER_TWO)
-		board[15] = create_board_line(6,7, PLAYER_TWO)
-		board[16] = create_board_line(6,6, PLAYER_TWO)
+		board.append(self.create_board_line(6, 6, self.PLAYER_ONE))
+		board.append(self.create_board_line(6, 7, self.PLAYER_ONE))
+		board.append(self.create_board_line(5, 7, self.PLAYER_ONE))
+		board.append(self.create_board_line(5, 8, self.PLAYER_ONE))
+		board.append(self.create_board_line(0, 12, self.EMPTY))
+		board.append(self.create_board_line(1, 12, self.EMPTY))
+		board.append(self.create_board_line(1, 11, self.EMPTY))
+		board.append(self.create_board_line(2, 11, self.EMPTY))
+		board.append(self.create_board_line(2, 10, self.EMPTY))
+		board.append(self.create_board_line(2, 11, self.EMPTY))
+		board.append(self.create_board_line(1, 11, self.EMPTY))
+		board.append(self.create_board_line(1, 12, self.EMPTY))
+		board.append(self.create_board_line(0, 12, self.EMPTY))
+		board.append(self.create_board_line(5, 6, self.PLAYER_TWO))
+		board.append(self.create_board_line(5, 7, self.PLAYER_TWO))
+		board.append(self.create_board_line(6, 7, self.PLAYER_TWO))
+		board.append(self.create_board_line(6, 6, self.PLAYER_TWO))
 		return board
+
 	def start_game(self):
-		while not __game_over():
-			__move()
-			__save_state()
-		GAMEOVER = true
-		__save_state()
+		while not self.game_over():
+			self.move()
+			self.save_state()
+		self.GAME_OVER = True
+		self.save_state()
 
-	def __move(self):
-		id_piece, new_pos = __calculate_random_move()
-		if (player_turn == PLAYER_ONE):
-			old_pos = self.player_one_pieces[id_piece]
-			self.player_one_pieces[id_piece] = new_pos
+	def move(self):
+		id_piece, new_pos = calculate_random_move()
+		old_pos = self.players_pieces[self.player_turn][id_piece]
+		self.players_pieces[self.player_turn][id_piece] = new_pos
+		self.board[new_pos[0]][new_pos[1]] = self.player_turn
+		self.board[old_pos[0]][old_pos[1]] = self.EMPTY
+		self.player_turn = self.player_turn % 2 + 1
 
-		else:
-			old_pos = self.player_two_pieces[id_piece]
-			self.player_two_pieces[id_piece] = new_pos
-
-		self.board[new_pos[0]][new_pos[1]] = player_turn
-		self.board[old_pos[0]][old_pos[1]] = EMPTY
-
-		player_turn = player_turn % 2 + 1
-
-	def __game_over(self):
+	def game_over(self):
 		i = 0
-		if (self.player_turn = PLAYER_ONE):
-			while (i < PIECES and self.player_one_pieces[i][0] > 13):
+		if (self.player_turn == self.PLAYER_ONE):
+			while (i < self.PIECES and self.players_pieces[1][i][0] > 13):
 				i += 1
 		else:
-			while (i < PIECES and self.player_two_pieces[i][0] < 4):
+			while (i < self.PIECES and self.players_pieces[2][i][0] < 4):
 				i += 1
-		return i == PIECES
-	def __save_state():
+		return i == self.PIECES
+
+	def save_state():
 		now = datetime.datetime.now()
 		name = "snapshots-" + str(now) + ".txt"
-		
 		file = open(name, "a")
-
 		line = "" + "-" + "" + "-" + "" + "-" + "\n"
 		file.write(line)
-
-		if GAMEOVER:
+		if GAME_OVER:
 			winner = self.player_turn % 2
 			line = str(winner) + "\n"
 			file.write(line)
-		
 		file.close()
 
-	def __calculate_random_move(self):
-  		piece = random.randint(0,9)
+	def calculate_moves(self, position):
+		possibilities = []
 
-  		if self.player_turn == PLAYER_ONE:
-  			actual_pos = self.player_one_pieces[piece]
-  		else:
-  			actual_pos = self.player_two_pieces[piece]
+		position_X_sub = position[0] - 1
+		position_X_add = position[0] + 1
+		position_Y_sub = position[1] - 1
+		position_Y_add = position[1] + 1
 
-  		possible_moves = []
+		# Primer movimiento posible | izquierda
+		if (self.Y_MIN < position_Y_sub):
+			if (self.board[position[0]][position_Y_sub] == 0):
+				possibilities.append([position[0],position_Y_sub])
+			elif (self.board[position[0]][position_Y_sub] != self.INVALID):
+				if(self.verify_jump([position[0],position_Y_sub - 1])):
+					possibilities.append([position[0],position_Y_sub - 1])
 
-  		for i in range(actual_pos[0] - 1,actual_pos[0] + 1):
-  				if i in range(XMIN,XMAX):
-  					for j in range(actual_pos[1] -1, actual_pos[1]-1):
-  						if j in range(YMIN,YMAX):
-  							if (self.board[i][j] == EMPTY and j != actual_pos[1]):
-  								possible_moves.append(i)
+		# Segundo movimiento posible | derecha
+		if (position_Y_add < self.Y_MAX):
+			if (self.board[position[0]][position_Y_add] == 0):
+				possibilities.append([position[0],position_Y_add])
+			elif (self.board[position[0]][position_Y_add] != self.INVALID):
+				if(self.verify_jump([position[0],position_Y_add + 1])):
+					possibilities.append([position[0],position_Y_add + 1])
 
-  		if len(possible_moves):
-  			selected_move = possible_moves[random.randint(0, len(possible_moves) - 1)]
+		# Tercer movimiento posible | arriba
+		if (self.X_MIN < position_X_sub):
+			if (self.board[position_X_sub][position[1]] == 0):
+				possibilities.append([position_X_sub,position[1]])
+			elif (self.board[position_X_sub][position[1]] != self.INVALID):
+				if(self.verify_jump([position_X_sub - 1,position[1]])):
+					possibilities.append([position_X_sub - 1,position[1]])
 
-  			if selected_move == 1:
-  				new_pos = [actual_pos[0] - 1, actual_pos[1] - 1]
-  			elif selected_move == 2:
-  				new_pos = [actual_pos[0] - 1, actual_pos[1]]
-  			elif selected_move == 3:
-  				new_pos = [actual_pos[0], actual_pos[1] - 1]
-  			elif selected_move == 4:
-  				new_pos = [actual_pos[0], actual_pos[1] + 1]
-  			elif selected_move == 5:
-  				new_pos = [actual_pos[0] + 1, actual_pos[1] ]
-  			elif selected_move == 6:
-  				new_pos = [actual_pos[0] + 1, actual_pos[1] + 1]
-  			return (pos, new_pos)
-  		else:
-  			
+		# Cuarto movimiento posible | abajo
+		if (position_X_add < self.X_MAX):
+			if (self.board[position_X_add][position[1]] == 0):
+				possibilities.append([position_X_add,position[1]])
+			elif (self.board[position_X_add][position[1]] != self.INVALID):
+				if(self.verify_jump([position_X_add + 1,position[1]])):
+					possibilities.append([position_X_add + 1,position[1]])
 
+		# Quinto movimiento posible | izquierda arriba
+		if (self.X_MIN < position_X_sub and self.Y_MIN < position_Y_sub):
+			if (self.board[position_X_sub][position_Y_sub] == 0):
+				possibilities.append([position_X_sub,position_Y_sub])
+			elif (self.board[position_X_sub][position_Y_sub] != self.INVALID):
+				if(self.verify_jump([position_X_sub - 1,position_Y_sub - 1])):
+					possibilities.append([position_X_sub - 1,position_Y_sub - 1])
 
+		# Sexto movimiento posible | derecha abajo
+		if (position_X_add < self.X_MAX and position_Y_add < self.Y_MAX):
+			if (self.board[position_X_add][position_Y_add] == 0):
+				possibilities.append([position_X_add,position_Y_add])
+			elif (self.board[position_X_add][position_Y_add] != self.INVALID):
+				if(self.verify_jump([position_X_add + 1,position_Y_add + 1])):
+					possibilities.append([position_X_add + 1,position_Y_add + 1])
 
+		return possibilities
 
+	def verify_jump(self, position):
+		return position[0] in range(self.X_MIN,self.X_MAX) and position[1] in range(self.Y_MIN,self.Y_MAX) and self.board[position[0]][position[1]] == self.EMPTY
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+Test = Game()
+Test.calculate_moves([2,5])
