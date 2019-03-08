@@ -143,37 +143,73 @@ class Game:
 				if(self.verify_jump([position[0],position_Y_add + 1])):
 					possibilities.append([position[0],position_Y_add + 1])
 
-		# Tercer movimiento posible | arriba
-		if (self.X_MIN < position_X_sub):
-			if (self.board[position_X_sub][position[1]] == 0):
-				possibilities.append([position_X_sub,position[1]])
-			elif (self.board[position_X_sub][position[1]] != self.INVALID):
-				if(self.verify_jump([position_X_sub - 2,position[1]])):
-					possibilities.append([position_X_sub - 2,position[1]])
+		# Si la fila es multiplo de 2
+		if (position[0] % 2 == 0):
+			# Tercer movimiento posible | izquierda arriba
+			if (self.X_MIN < position_X_sub):
+				if (self.board[position_X_sub][position[1]] == 0):
+					possibilities.append([position_X_sub,position[1]])
+				elif (self.board[position_X_sub][position[1]] != self.INVALID):
+					if(self.verify_jump([position_X_sub - 1,position_Y_sub])):
+						possibilities.append([position_X_sub - 1,position_Y_sub])
 
-		# Cuarto movimiento posible | abajo
-		if (position_X_add < self.X_MAX):
-			if (self.board[position_X_add][position[1]] == 0):
-				possibilities.append([position_X_add,position[1]])
-			elif (self.board[position_X_add][position[1]] != self.INVALID):
-				if(self.verify_jump([position_X_add + 2,position[1]])):
-					possibilities.append([position_X_add + 2,position[1]])
+			# Cuarto movimiento posible | derecha arriba
+			if (self.X_MIN < position_X_sub and position_Y_add < self.Y_MAX):
+				if (self.board[position_X_sub][position_Y_add] == 0):
+					possibilities.append([position_X_sub,position_Y_add])
+				elif (self.board[position_X_sub][position_Y_add] != self.INVALID):
+					if(self.verify_jump([position_X_sub - 1,position_Y_add])):
+						possibilities.append([position_X_sub - 1,position_Y_add])
 
-		# Quinto movimiento posible | izquierda arriba
-		if (self.X_MIN < position_X_sub and self.Y_MIN < position_Y_sub):
-			if (self.board[position_X_sub][position_Y_sub] == 0):
-				possibilities.append([position_X_sub,position_Y_sub])
-			elif (self.board[position_X_sub][position_Y_sub] != self.INVALID):
-				if(self.verify_jump([position_X_sub - 1,position_Y_sub - 2])):
-					possibilities.append([position_X_sub - 1,position_Y_sub - 2])
+			# Quinto movimiento posible | izquierda abajo
+			if (position_X_add < self.X_MAX):
+				if (self.board[position_X_add][position[1]] == 0):
+					possibilities.append([position_X_add,position[1]])
+				elif (self.board[position_X_add][position[1]] != self.INVALID):
+					if(self.verify_jump([position_X_add + 1,position_Y_sub])):
+						possibilities.append([position_X_add + 1,position_Y_sub])
 
-		# Sexto movimiento posible | derecha abajo
-		if (position_X_add < self.X_MAX and position_Y_add < self.Y_MAX):
-			if (self.board[position_X_add][position_Y_add] == 0):
-				possibilities.append([position_X_add,position_Y_add])
-			elif (self.board[position_X_add][position_Y_add] != self.INVALID):
-				if(self.verify_jump([position_X_add + 1,position_Y_add + 2])):
-					possibilities.append([position_X_add + 1,position_Y_add + 2])
+			# Sexto movimiento posible | derecha abajo
+			if (position_X_add < self.X_MAX and position_Y_add < self.Y_MAX):
+				if (self.board[position_X_add][position_Y_add] == 0):
+					possibilities.append([position_X_add,position_Y_add])
+				elif (self.board[position_X_add][position_Y_add] != self.INVALID):
+					if(self.verify_jump([position_X_add + 1,position_Y_add])):
+						possibilities.append([position_X_add + 1,position_Y_add])
+
+		# Si la fila no es multiplo de 2
+		else:
+			# Tercer movimiento posible | izquierda arriba
+			if (self.X_MIN < position_X_sub and self.Y_MIN < position_Y_sub):
+				if (self.board[position_X_sub][position_Y_sub] == 0):
+					possibilities.append([position_X_sub,position_Y_sub])
+				elif (self.board[position_X_sub][position_Y_sub] != self.INVALID):
+					if(self.verify_jump([position_X_sub - 1,position_Y_sub])):
+						possibilities.append([position_X_sub - 1,position_Y_sub])
+
+			# Cuarto movimiento posible | derecha arriba
+			if (self.X_MIN < position_X_sub):
+				if (self.board[position_X_sub][position[1]] == 0):
+					possibilities.append([position_X_sub,position[1]])
+				elif (self.board[position_X_sub][position[1]] != self.INVALID):
+					if(self.verify_jump([position_X_sub - 1,position_Y_add])):
+						possibilities.append([position_X_sub - 1,position_Y_add])
+
+			# Quinto movimiento posible | izquierda abajo
+			if (position_X_add < self.X_MAX and self.Y_MIN < position_Y_sub):
+				if (self.board[position_X_add][position_Y_sub] == 0):
+					possibilities.append([position_X_add,position_Y_sub])
+				elif (self.board[position_X_add][position_Y_sub] != self.INVALID):
+					if(self.verify_jump([position_X_add + 1,position_Y_sub])):
+						possibilities.append([position_X_add + 1,position_Y_sub])
+
+			# Sexto movimiento posible | derecha abajo
+			if (position_X_add < self.X_MAX):
+				if (self.board[position_X_add][position[1]] == 0):
+					possibilities.append([position_X_add,position[1]])
+				elif (self.board[position_X_add][position[1]] != self.INVALID):
+					if(self.verify_jump([position_X_add + 1,position_Y_add])):
+						possibilities.append([position_X_add + 1,position_Y_add])
 
 		return possibilities
 
