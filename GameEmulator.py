@@ -29,7 +29,15 @@ class Game:
 		self.player1_in = 0
 		self.player2_in = 0
 
-		self.movimientos_temporal = 0
+		self.player1_done_pieces = 0
+		self.player1_advanced_pieces = 0
+		self.player1_middle_pieces = 0
+		self.player1_far_pieces = 10
+
+		self.player2_done_pieces = 0
+		self.player2_advanced_pieces = 0
+		self.player2_middle_pieces = 0
+		self.player2_far_pieces = 10
 
 	def initialize_players_pieces(self):
 		players_pieces = []
@@ -53,15 +61,15 @@ class Game:
 		board.append(self.create_board_line(6, 7, self.PLAYER_ONE))
 		board.append(self.create_board_line(5, 7, self.PLAYER_ONE))
 		board.append(self.create_board_line(5, 8, self.PLAYER_ONE))
-		board.append(self.create_board_line(0, 12, self.EMPTY))
-		board.append(self.create_board_line(1, 12, self.EMPTY))
-		board.append(self.create_board_line(1, 11, self.EMPTY))
-		board.append(self.create_board_line(2, 11, self.EMPTY))
+		board.append(self.create_board_line(4, 8, self.EMPTY))
+		board.append(self.create_board_line(4, 9, self.EMPTY))
+		board.append(self.create_board_line(3, 9, self.EMPTY))
+		board.append(self.create_board_line(3, 10, self.EMPTY))
 		board.append(self.create_board_line(2, 10, self.EMPTY))
-		board.append(self.create_board_line(2, 11, self.EMPTY))
-		board.append(self.create_board_line(1, 11, self.EMPTY))
-		board.append(self.create_board_line(1, 12, self.EMPTY))
-		board.append(self.create_board_line(0, 12, self.EMPTY))
+		board.append(self.create_board_line(3, 10, self.EMPTY))
+		board.append(self.create_board_line(3, 9, self.EMPTY))
+		board.append(self.create_board_line(4, 9, self.EMPTY))
+		board.append(self.create_board_line(4, 8, self.EMPTY))
 		board.append(self.create_board_line(5, 8, self.PLAYER_TWO))
 		board.append(self.create_board_line(5, 7, self.PLAYER_TWO))
 		board.append(self.create_board_line(6, 7, self.PLAYER_TWO))
@@ -69,30 +77,101 @@ class Game:
 		return board
 
 	def start_game(self):
-		self.save_state();
-		while not self.game_over():
-			self.move()
+		while not self.GAME_OVER:
+			self.move_weighted()
+			
+			if self.game_over():
+				self.save_state()
+				break
 			self.save_state()
-		self.GAME_OVER = True
-		self.save_state()
+			
+			self.move_randomly()
+			if self.game_over():
+				self.save_state()	
+				break
+			self.save_state()
+		
+	def add(self, var_player1, var_player2):
+		if (self.player_turn == self.PLAYER_ONE):
+			var_player1 += 1
+		else:
+			var_player2 += 1
 
-	def move(self):
+	def sub(self, var_player1, var_player2):
+		if (self.player_turn == self.PLAYER_ONE):
+			var_player1 -= 1
+		else:
+			var_player2 -= 1				
+
+	def update_var(self, old_pos, new_pos):
+		if (new_pos[0] > 12):
+			self.add(self.player1_done_pieces, self.player2_far_pieces)
+		elif (new_pos[0] > 9):
+			self.add(self.player1_advanced_pieces, self.player2_far_pieces)
+		elif (new_pos[0] > 6):
+			self.add(self.player1_middle_pieces, self.player2_middle_pieces)
+		elif (new_pos[0] > 4):
+			self.add(self.player1_far_pieces, self.player2_advanced_pieces)
+		else:
+			self.add(self.player1_far_pieces, self.player2_done_pieces)
+
+		if (old_pos[0] > 12):
+			self.sub(self.player1_done_pieces, self.player2_far_pieces)
+		elif (old_pos[0] > 9):
+			self.sub(self.player1_advanced_pieces, self.player2_far_pieces)
+		elif (old_pos[0] > 6):
+			self.sub(self.player1_middle_pieces, self.player2_middle_pieces)
+		elif (old_pos[0] > 4):
+			self.sub(self.player1_far_pieces, self.player2_advanced_pieces)
+		else:
+			self.sub(self.player1_far_pieces, self.player2_done_pieces)
+
+	def execute_move(self, id_piece, new_pos):
+		old_pos = self.players_pieces[self.player_turn][id_piece]
+
+		self.players_pieces[self.player_turn][id_piece] = new_pos
+		self.board[new_pos[0]][new_pos[1]] = self.player_turn
+		self.board[old_pos[0]][old_pos[1]] = self.EMPTY
+
+		self.update_var(old_pos, new_pos)
+
+		self.player_turn = self.player_turn % 2 + 1
+
+	def move_randomly(self):
 		id_piece = random.randint(0, self.PIECES - 1)
-		#
-		#pdb.set_trace()
 		possibilities = self.calculate_moves(self.players_pieces[self.player_turn][id_piece])
-		#print(possibilities)
 		if possibilities:
 			new_pos = possibilities[random.randint(0,len(possibilities)- 1)]
-
-			old_pos = self.players_pieces[self.player_turn][id_piece]
-			self.players_pieces[self.player_turn][id_piece] = new_pos
-			#pdb.set_trace()
-			self.board[new_pos[0]][new_pos[1]] = self.player_turn
-			self.board[old_pos[0]][old_pos[1]] = self.EMPTY
-			self.player_turn = self.player_turn % 2 + 1
 		else:
-			self.move()
+			self.move_randomly()
+
+	def move_weighted(self):
+		profit = 0.0
+		piece = 0
+		move = [0,0]
+		stop = False
+		i = 1
+
+		while (not stop and i in range(self.PIECES+1)):
+			possibilities = self.calculate_moves(self.players_pieces[self.PLAYER_ONE][i])
+			for possible_move in possibilities:
+				current_profit = self.compute_state()
+				if (current_profit > 0,79):
+					piece = i
+					move = possible_move
+					stop = True
+					break
+				elif (current_profit > profit):
+					piece = i
+					move = possible_move
+			i += 1
+		self.execute_move(piece, move)
+
+	def compute_state(self):
+		independent_var = 0
+		player_one_weight = self.player1_done_pieces*0.1 + self.player1_advanced_pieces*0.07 + self.player1_middle_pieces*0.06 + self.player1_far_pieces*0.05
+		player_two_weight = self.player1_done_pieces*(-0.1) + self.player1_advanced_pieces*(-0.07) + self.player1_middle_pieces*(-0.06) + self.player1_far_pieces*(-0.05)
+		return (player_one_weight + player_two_weight + independent_var)
 
 	def game_over(self):
 		i = 0
@@ -102,21 +181,30 @@ class Game:
 		else:
 			while (i < self.PIECES and self.players_pieces[2][i][0] < 4):
 				i += 1
-		return i == self.PIECES
+		self.GAME_OVER = i == self.PIECES
+		return self.GAME_OVER
 
-	def save_state(self):	
+	def save_state(self):
 		file = open(self.name, "a")
-
-		if self.movimientos_temporal < 10:
-			self.movimientos_temporal += 1
-			for i in range(len(self.board)):
-				file.write(str(self.board[i]) + "\n")
-			file.write("-------------------------------\n")
-		#file.write(line)
-		#if self.GAME_OVER:
-		#	winner = self.player_turn % 2
-		#	line = str(winner) + "\n"
-		#	file.write(line)
+		
+		line = ""
+		line += str(self.player1_done_pieces) + "-"  + str(self.player2_done_pieces)
+		line += str(self.player1_advanced_pieces) + "-" + str(self.player2_advanced_pieces)
+		line += str(self.player1_middle_pieces) + "-" + str(self.player2_middle_pieces)
+		line += str(self.player1_far_pieces) + "-" + str(self.player2_far_pieces)
+		line += "\n"
+				 
+		#if self.movimientos_temporal < 10:
+		#	self.movimientos_temporal += 1
+		#	for i in range(len(self.board)):
+		#		file.write(str(self.board[i]) + "\n")
+		#	file.write("-------------------------------\n")
+		file.write(line)
+		
+		if self.GAME_OVER:
+			winner = self.player_turn % 2
+			line = str(winner) + "\n"
+			file.write(line)
 		file.close()
 
 	def calculate_moves(self, position):
