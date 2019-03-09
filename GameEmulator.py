@@ -14,20 +14,17 @@ class Game:
 
 	X_MAX = 17
 	X_MIN = -1
-	Y_MAX = 13
+	Y_MAX = 9
 	Y_MIN = -1
 
 	def __init__(self):
 		now = datetime.datetime.now()
-		name = "snapshots-" + str(now) + ".txt"
+		name = "snapshots-" + str(now).replace(':','_') + ".txt"
 		
 		self.name = name 
-		self.board = self.create_board()
 		self.player_turn = 1
+		self.board = self.create_board()
 		self.players_pieces = self.initialize_players_pieces()
-
-		self.player1_in = 0
-		self.player2_in = 0
 
 		self.player1_done_pieces = 0
 		self.player1_advanced_pieces = 0
@@ -38,6 +35,8 @@ class Game:
 		self.player2_advanced_pieces = 0
 		self.player2_middle_pieces = 0
 		self.player2_far_pieces = 10
+
+		print(self.board)
 
 	def initialize_players_pieces(self):
 		players_pieces = []
@@ -83,13 +82,12 @@ class Game:
 			if self.game_over():
 				self.save_state()
 				break
-			self.save_state()
 			
 			self.move_randomly()
 			if self.game_over():
 				self.save_state()	
 				break
-			self.save_state()
+			self.save_state() # save state once, after both players have played
 		
 	def add(self, var_player1, var_player2):
 		if (self.player_turn == self.PLAYER_ONE):
@@ -128,10 +126,10 @@ class Game:
 
 	def execute_move(self, id_piece, new_pos):
 		old_pos = self.players_pieces[self.player_turn][id_piece]
+		self.board[old_pos[0]][old_pos[1]] = self.EMPTY
 
 		self.players_pieces[self.player_turn][id_piece] = new_pos
 		self.board[new_pos[0]][new_pos[1]] = self.player_turn
-		self.board[old_pos[0]][old_pos[1]] = self.EMPTY
 
 		self.update_var(old_pos, new_pos)
 
@@ -146,7 +144,7 @@ class Game:
 			self.move_randomly()
 
 	def move_weighted(self):
-		profit = 0.0
+		greatest_profit = 0.0
 		piece = 0
 		move = [0,0]
 		stop = False
@@ -155,31 +153,37 @@ class Game:
 		while (not stop and i in range(self.PIECES+1)):
 			possibilities = self.calculate_moves(self.players_pieces[self.PLAYER_ONE][i])
 			for possible_move in possibilities:
-				current_profit = self.compute_state()
+				current_profit = self.simulate_state(i, possible_move)
 				if (current_profit > 0,79):
 					piece = i
 					move = possible_move
 					stop = True
 					break
-				elif (current_profit > profit):
+				elif (current_profit > greatest_profit):
 					piece = i
 					move = possible_move
 			i += 1
 		self.execute_move(piece, move)
 
-	def compute_state(self):
+	def simulate_state(self, id_piece, move_to_test):
+		old_pos = self.players_pieces[self.player_turn][id_piece]
+		self.update_var(old_pos, move_to_test)
+
 		independent_var = 0
 		player_one_weight = self.player1_done_pieces*0.1 + self.player1_advanced_pieces*0.07 + self.player1_middle_pieces*0.06 + self.player1_far_pieces*0.05
 		player_two_weight = self.player1_done_pieces*(-0.1) + self.player1_advanced_pieces*(-0.07) + self.player1_middle_pieces*(-0.06) + self.player1_far_pieces*(-0.05)
+		
+		self.update_var(move_to_test, old_pos) # undo 'fake' movement
+
 		return (player_one_weight + player_two_weight + independent_var)
 
 	def game_over(self):
 		i = 0
 		if (self.player_turn == self.PLAYER_ONE):
-			while (i < self.PIECES and self.players_pieces[1][i][0] > 13):
+			while (i < self.PIECES and self.players_pieces[self.PLAYER_ONE][i][0] > 13):
 				i += 1
 		else:
-			while (i < self.PIECES and self.players_pieces[2][i][0] < 4):
+			while (i < self.PIECES and self.players_pieces[self.PLAYER_TWO][i][0] < 4):
 				i += 1
 		self.GAME_OVER = i == self.PIECES
 		return self.GAME_OVER
@@ -188,17 +192,11 @@ class Game:
 		file = open(self.name, "a")
 		
 		line = ""
-		line += str(self.player1_done_pieces) + "-"  + str(self.player2_done_pieces)
-		line += str(self.player1_advanced_pieces) + "-" + str(self.player2_advanced_pieces)
-		line += str(self.player1_middle_pieces) + "-" + str(self.player2_middle_pieces)
+		line += str(self.player1_done_pieces) + "-"  + str(self.player2_done_pieces) + "-"
+		line += str(self.player1_advanced_pieces) + "-" + str(self.player2_advanced_pieces) + "-"
+		line += str(self.player1_middle_pieces) + "-" + str(self.player2_middle_pieces) + "-"
 		line += str(self.player1_far_pieces) + "-" + str(self.player2_far_pieces)
 		line += "\n"
-				 
-		#if self.movimientos_temporal < 10:
-		#	self.movimientos_temporal += 1
-		#	for i in range(len(self.board)):
-		#		file.write(str(self.board[i]) + "\n")
-		#	file.write("-------------------------------\n")
 		file.write(line)
 		
 		if self.GAME_OVER:
@@ -303,8 +301,6 @@ class Game:
 
 	def verify_jump(self, position):
 		return position[0] in range(self.X_MIN,self.X_MAX) and position[1] in range(self.Y_MIN,self.Y_MAX) and self.board[position[0]][position[1]] == self.EMPTY
-
-
 
 if __name__== "__main__":
 	Test = Game()
