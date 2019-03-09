@@ -102,6 +102,7 @@ class Game:
 			var_player2 -= 1				
 
 	def update_var(self, old_pos, new_pos):
+		#pdb.set_trace()
 		if (new_pos[0] > 12):
 			self.add(self.player1_done_pieces, self.player2_far_pieces)
 		elif (new_pos[0] > 9):
