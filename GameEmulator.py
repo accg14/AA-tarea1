@@ -84,20 +84,12 @@ class Game:
 	def start_game(self):
 		while not self.GAME_OVER:
 			self.move_weighted()
-			self.save_state()
+			self.game_over()
 			self.move += 1
-
-			if self.game_over():
-				self.save_state()
-				break
 
 			self.move_randomly()
-			self.save_state()
+			self.game_over()
 			self.move += 1
-
-			if self.game_over():
-				self.save_state()	
-				break
 
 	def add(self, var_player1, var_player2):
 		if (self.player_turn == self.PLAYER_ONE):
@@ -112,7 +104,7 @@ class Game:
 			var_player2 -= 1				
 
 	def update_var(self, old_pos, new_pos):
-		if (self.player_turn == 1):
+		if (self.player_turn == self.PLAYER_ONE):
 			if (old_pos[0] < 4):
 				self.player1_start_pieces -= 1
 			elif (old_pos[0] < 7):
@@ -187,7 +179,7 @@ class Game:
 
 		while (not stop and i in range(self.PIECES)):
 			possibilities = self.calculate_moves(self.players_pieces[self.PLAYER_ONE][i])
-			print("PIECES: ", str(i), "possibilities: ", str(possibilities))
+			#print("PIECES: ", str(i), "possibilities: ", str(possibilities))
 			for possible_move in possibilities:
 				current_profit = self.simulate_state(i, possible_move)
 				if (current_profit > 0.59):
@@ -201,8 +193,7 @@ class Game:
 					greatest_profit = current_profit
 
 			i += 1
-		print("current_profit: ", str(current_profit), " piece: ", str(piece), " move: ", str(move))
-		print()
+		#print("current_profit: ", str(current_profit), " piece: ", str(piece), " move: ", str(move))
 		self.execute_move(piece, move)
 
 	def simulate_state(self, id_piece, move_to_test):
@@ -219,7 +210,12 @@ class Game:
 		return (player_one_weight + player_two_weight + independent_var)
 
 	def game_over(self):
-		return self.player1_end_pieces == self.PIECES or self.player2_end_pieces == self.PIECES
+		self.save_state()
+
+		if(self.player1_end_pieces == self.PIECES or self.player2_end_pieces == self.PIECES):
+			self.GAME_OVER = True
+
+		return self.GAME_OVER
 
 	def save_state(self):
 		file = open(self.name, "a")
@@ -264,7 +260,7 @@ class Game:
 
 		# Si la fila es multiplo de 2
 		if (position[0] % 2 == 0):
-			if not (self.player_turn == 1 and self.PLAYER_1_X_WIN < position[0]):
+			if not (self.player_turn == self.PLAYER_ONE and self.PLAYER_1_X_WIN < position[0]):
 				# Tercer movimiento posible | izquierda arriba
 				if (self.X_MIN < position_X_sub):
 					if (self.board[position_X_sub][position[1]] == 0):
@@ -281,7 +277,7 @@ class Game:
 						if(self.verify_jump([position_X_sub - 1,position_Y_add])):
 							possibilities.append([position_X_sub - 1,position_Y_add])
 
-			if not (self.player_turn == 2 and position[0] < self.PLAYER_2_X_WIN):
+			if not (self.player_turn == self.PLAYER_TWO and position[0] < self.PLAYER_2_X_WIN):
 				# Quinto movimiento posible | izquierda abajo
 				if (position_X_add < self.X_MAX):
 					if (self.board[position_X_add][position[1]] == 0):
@@ -300,7 +296,7 @@ class Game:
 
 		# Si la fila no es multiplo de 2
 		else:
-			if not (self.player_turn == 1 and self.PLAYER_1_X_WIN < position[0]):
+			if not (self.player_turn == self.PLAYER_ONE and self.PLAYER_1_X_WIN < position[0]):
 				# Tercer movimiento posible | izquierda arriba
 				if (self.X_MIN < position_X_sub and self.Y_MIN < position_Y_sub):
 					if (self.board[position_X_sub][position_Y_sub] == 0):
@@ -317,7 +313,7 @@ class Game:
 						if(self.verify_jump([position_X_sub - 1,position_Y_add])):
 							possibilities.append([position_X_sub - 1,position_Y_add])
 
-			if not (self.player_turn == 2 and position[0] < self.PLAYER_2_X_WIN):
+			if not (self.player_turn == self.PLAYER_TWO and position[0] < self.PLAYER_2_X_WIN):
 				# Quinto movimiento posible | izquierda abajo
 				if (position_X_add < self.X_MAX and self.Y_MIN < position_Y_sub):
 					if (self.board[position_X_add][position_Y_sub] == 0):
