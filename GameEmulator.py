@@ -1,6 +1,7 @@
 import random
 import pdb
 import datetime
+from Generalizer import Generalizer
 
 class Game:
 	GAME_OVER = False
@@ -23,7 +24,9 @@ class Game:
 	def __init__(self):
 		now = datetime.datetime.now()
 		name = "snapshots-" + str(now).replace(':','_') + ".txt"
-		
+
+		self.generalizer = Generalizer()
+
 		self.name = name 
 		self.player_turn = 1
 		self.board = self.create_board()
@@ -41,8 +44,7 @@ class Game:
 		self.player2_near_pieces = 0
 		self.player2_end_pieces = 0
 
-		# TODO: BORRAR
-		self.move = 0
+		self.move_identifier = 0
 
 	def initialize_players_pieces(self):
 		players_pieces = []
@@ -84,13 +86,13 @@ class Game:
 	def start_game(self):
 		while not self.GAME_OVER:
 			self.move_weighted()
+			self.move_identifier += 1
 			self.game_over()
-			self.move += 1
 
 			if (not self.GAME_OVER):
 				self.move_randomly()
+				self.move_identifier += 1
 				self.game_over()
-				self.move += 1
 
 	def add(self, var_player1, var_player2):
 		if (self.player_turn == self.PLAYER_ONE):
@@ -180,46 +182,46 @@ class Game:
 
 		while (not stop and i in range(self.PIECES)):
 			possibilities = self.calculate_moves(self.players_pieces[self.PLAYER_ONE][i])
-			#print("PIECES: ", str(i), "possibilities: ", str(possibilities))
+			print("PIECES: ", str(i), "possibilities: ", str(possibilities))
 			for possible_move in possibilities:
 				current_profit = self.simulate_state(i, possible_move)
-				if (current_profit > 0.59):
+				if (current_profit > 0.50):
 					piece = i
 					move = possible_move
 					stop = True
 					break
 				elif (current_profit > greatest_profit):
+					greatest_profit = current_profit
 					piece = i
 					move = possible_move
-					greatest_profit = current_profit
 
 			i += 1
-		#print("current_profit: ", str(current_profit), " piece: ", str(piece), " move: ", str(move))
+		print("current_profit: ", str(current_profit), " piece: ", str(piece), " move: ", str(move))
 		self.execute_move(piece, move)
 
 	def simulate_state(self, id_piece, move_to_test):
 		old_pos = self.players_pieces[self.player_turn][id_piece]
 		self.update_var(old_pos, move_to_test)
 
-		independent_var = 0
-		player_one_weight = self.player1_end_pieces*0.1 + self.player1_near_pieces*0.075 + self.player1_middle_pieces*0.055 + self.player1_far_pieces*0.035 + self.player1_start_pieces*0.015
+		player_one_weight = self.player1_end_pieces*self.generalizer.get_player1_end_weight() + self.player1_near_pieces*self.generalizer.get_player1_near_weight() + self.player1_middle_pieces*self.generalizer.get_player1_middle_weight() + self.player1_far_pieces*self.generalizer.get_player1_far_weight() + self.player1_start_pieces*self.generalizer.get_player1_start_weight()
 
-		player_two_weight = self.player2_end_pieces*(-0.1) + self.player2_near_pieces*(-0.06) + self.player2_middle_pieces*(-0.04) + self.player2_far_pieces*(-0.02) + self.player2_start_pieces*(0.0015)
+		player_two_weight = self.player2_end_pieces*self.generalizer.get_player2_end_weight() + self.player2_near_pieces*self.generalizer.get_player2_near_weight() + self.player2_middle_pieces*self.generalizer.get_player2_middle_weight() + self.player2_far_pieces*self.generalizer.get_player2_far_weight() + self.player2_start_pieces*self.generalizer.get_player2_start_weight()
 
 		self.update_var(move_to_test, old_pos) # undo 'fake' movement
 
-		return (player_one_weight + player_two_weight + independent_var)
+		return (player_one_weight + player_two_weight + self.generalizer.get_independent_weight())
 
 	def game_over(self):
-		self.save_state()
-
 		if(self.player1_end_pieces == self.PIECES or self.player2_end_pieces == self.PIECES):
 			self.GAME_OVER = True
+			self.generalizer.adjust_weights()
+
+		self.save_state()
 
 	def save_state(self):
 		file = open(self.name, "a")
 
-		line = str(self.move) + " ||||| "
+		line = str(self.move_identifier) + "|||||"
 		line += "  End (" + str(self.player1_end_pieces) + " | "  + str(self.player2_end_pieces) + ")"
 		line += "  Near (" + str(self.player1_near_pieces) + " | " + str(self.player2_near_pieces) + ")"
 		line += "  Medium (" + str(self.player1_middle_pieces) + " | " + str(self.player2_middle_pieces) + ")"
@@ -228,9 +230,13 @@ class Game:
 		file.write(line)
 
 		if self.GAME_OVER:
-			winner = self.player_turn % 2
+			if (self.player1_end_pieces == self.PIECES):
+				winner = 1
+			else:
+				winner = -1
 			line = str(winner) + "\n"
 			file.write(line)
+
 		file.close()
 
 	def calculate_moves(self, position):
