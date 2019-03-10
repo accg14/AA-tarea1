@@ -36,13 +36,11 @@ class Game:
 		self.player2_middle_pieces = 0
 		self.player2_far_pieces = 10
 
-		print(self.board)
-
 	def initialize_players_pieces(self):
 		players_pieces = []
 		players_pieces.append([])
-		players_pieces.append([[0,6], [1,6], [1,7], [2,5], [2,6], [2,7], [3,5], [3,6], [3,7], [3,8]])
-		players_pieces.append([[16,6], [15,6], [15,7], [14,5], [14,6], [14,7], [13,5], [13,6], [13,7], [13,8]])
+		players_pieces.append([[0,4], [1,4], [1,5], [2,3], [2,4], [2,5], [3,2], [3,3], [3,4], [3,5]])
+		players_pieces.append([[16,4], [15,4], [15,5], [14,3], [14,4], [14,5], [13,2], [13,3], [13,5], [13,5]])
 		return players_pieces
 
 	def create_board_line(self, start, end, value):
@@ -56,23 +54,23 @@ class Game:
 
 	def create_board(self):
 		board = []
-		board.append(self.create_board_line(6, 6, self.PLAYER_ONE))
-		board.append(self.create_board_line(6, 7, self.PLAYER_ONE))
-		board.append(self.create_board_line(5, 7, self.PLAYER_ONE))
-		board.append(self.create_board_line(5, 8, self.PLAYER_ONE))
-		board.append(self.create_board_line(4, 8, self.EMPTY))
-		board.append(self.create_board_line(4, 9, self.EMPTY))
-		board.append(self.create_board_line(3, 9, self.EMPTY))
-		board.append(self.create_board_line(3, 10, self.EMPTY))
-		board.append(self.create_board_line(2, 10, self.EMPTY))
-		board.append(self.create_board_line(3, 10, self.EMPTY))
-		board.append(self.create_board_line(3, 9, self.EMPTY))
-		board.append(self.create_board_line(4, 9, self.EMPTY))
-		board.append(self.create_board_line(4, 8, self.EMPTY))
-		board.append(self.create_board_line(5, 8, self.PLAYER_TWO))
-		board.append(self.create_board_line(5, 7, self.PLAYER_TWO))
-		board.append(self.create_board_line(6, 7, self.PLAYER_TWO))
-		board.append(self.create_board_line(6, 6, self.PLAYER_TWO))
+		board.append(self.create_board_line(4, 4, self.PLAYER_ONE))
+		board.append(self.create_board_line(4, 5, self.PLAYER_ONE))
+		board.append(self.create_board_line(3, 5, self.PLAYER_ONE))
+		board.append(self.create_board_line(3, 6, self.PLAYER_ONE))
+		board.append(self.create_board_line(2, 6, self.EMPTY))
+		board.append(self.create_board_line(2, 7, self.EMPTY))
+		board.append(self.create_board_line(1, 7, self.EMPTY))
+		board.append(self.create_board_line(1, 8, self.EMPTY))
+		board.append(self.create_board_line(0, 8, self.EMPTY))
+		board.append(self.create_board_line(1, 8, self.EMPTY))
+		board.append(self.create_board_line(1, 7, self.EMPTY))
+		board.append(self.create_board_line(2, 7, self.EMPTY))
+		board.append(self.create_board_line(2, 6, self.EMPTY))
+		board.append(self.create_board_line(3, 6, self.PLAYER_TWO))
+		board.append(self.create_board_line(3, 5, self.PLAYER_TWO))
+		board.append(self.create_board_line(4, 5, self.PLAYER_TWO))
+		board.append(self.create_board_line(4, 4, self.PLAYER_TWO))
 		return board
 
 	def start_game(self):
@@ -102,29 +100,57 @@ class Game:
 			var_player2 -= 1				
 
 	def update_var(self, old_pos, new_pos):
-		#pdb.set_trace()
 		if (new_pos[0] > 12):
-			self.add(self.player1_done_pieces, self.player2_far_pieces)
+			if (self.player_turn == self.PLAYER_ONE):
+				self.player1_done_pieces += 1
+			else:
+				self.player2_far_pieces += 1
+		
 		elif (new_pos[0] > 9):
-			self.add(self.player1_advanced_pieces, self.player2_far_pieces)
+			if (self.player_turn == self.PLAYER_ONE):
+				self.player1_advanced_pieces += 1
+			else:
+				self.player2_far_pieces += 1
 		elif (new_pos[0] > 6):
-			self.add(self.player1_middle_pieces, self.player2_middle_pieces)
+			if (self.player_turn == self.PLAYER_ONE):
+				self.player1_middle_pieces += 1
+			else:
+				self.player2_middle_pieces += 1
 		elif (new_pos[0] > 4):
-			self.add(self.player1_far_pieces, self.player2_advanced_pieces)
+			if (self.player_turn == self.PLAYER_ONE):
+				self.player1_far_pieces += 1
+			else:
+				self.player2_advanced_pieces += 1
 		else:
-			self.add(self.player1_far_pieces, self.player2_done_pieces)
-
+			if (self.player_turn == self.PLAYER_ONE):
+				self.player1_far_pieces += 1
+			else:
+				self.player2_done_pieces += 1
 		if (old_pos[0] > 12):
-			self.sub(self.player1_done_pieces, self.player2_far_pieces)
+			if (self.player_turn == self.PLAYER_ONE):
+				self.player1_done_pieces -= 1
+			else:
+				self.player2_far_pieces -= 1
 		elif (old_pos[0] > 9):
-			self.sub(self.player1_advanced_pieces, self.player2_far_pieces)
+			if (self.player_turn == self.PLAYER_ONE):
+				self.player1_advanced_pieces -= 1
+			else:
+				self.player2_far_pieces -= 1
 		elif (old_pos[0] > 6):
-			self.sub(self.player1_middle_pieces, self.player2_middle_pieces)
+			if (self.player_turn == self.PLAYER_ONE):
+				self.player1_middle_pieces -= 1
+			else:
+				self.player2_middle_pieces -= 1
 		elif (old_pos[0] > 4):
-			self.sub(self.player1_far_pieces, self.player2_advanced_pieces)
+			if (self.player_turn == self.PLAYER_ONE):
+				self.player1_far_pieces -= 1
+			else:
+				self.player2_advanced_pieces -= 1
 		else:
-			self.sub(self.player1_far_pieces, self.player2_done_pieces)
-
+			if (self.player_turn == self.PLAYER_ONE):
+				self.player1_far_pieces -= 1
+			else:
+				self.player2_done_pieces -= 1
 	def execute_move(self, id_piece, new_pos):
 		old_pos = self.players_pieces[self.player_turn][id_piece]
 		self.board[old_pos[0]][old_pos[1]] = self.EMPTY
@@ -141,6 +167,7 @@ class Game:
 		possibilities = self.calculate_moves(self.players_pieces[self.player_turn][id_piece])
 		if possibilities:
 			new_pos = possibilities[random.randint(0,len(possibilities)- 1)]
+			self.execute_move(id_piece, new_pos)
 		else:
 			self.move_randomly()
 
