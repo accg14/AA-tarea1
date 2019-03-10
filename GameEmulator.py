@@ -29,15 +29,20 @@ class Game:
 		self.board = self.create_board()
 		self.players_pieces = self.initialize_players_pieces()
 
-		self.player1_done_pieces = 0
-		self.player1_advanced_pieces = 0
+		self.player1_start_pieces = 10
+		self.player1_far_pieces = 0
 		self.player1_middle_pieces = 0
-		self.player1_far_pieces = 10
+		self.player1_near_pieces = 0
+		self.player1_end_pieces = 0
 
-		self.player2_done_pieces = 0
-		self.player2_advanced_pieces = 0
+		self.player2_start_pieces = 10
+		self.player2_far_pieces = 0
 		self.player2_middle_pieces = 0
-		self.player2_far_pieces = 10
+		self.player2_near_pieces = 0
+		self.player2_end_pieces = 0
+
+		# TODO: BORRAR
+		self.move = 0
 
 	def initialize_players_pieces(self):
 		players_pieces = []
@@ -79,17 +84,21 @@ class Game:
 	def start_game(self):
 		while not self.GAME_OVER:
 			self.move_weighted()
-			
+			self.save_state()
+			self.move += 1
+
 			if self.game_over():
 				self.save_state()
 				break
-			
+
 			self.move_randomly()
+			self.save_state()
+			self.move += 1
+
 			if self.game_over():
 				self.save_state()	
 				break
-			self.save_state() # save state once, after both players have played
-		
+
 	def add(self, var_player1, var_player2):
 		if (self.player_turn == self.PLAYER_ONE):
 			var_player1 += 1
@@ -103,57 +112,52 @@ class Game:
 			var_player2 -= 1				
 
 	def update_var(self, old_pos, new_pos):
-		if (new_pos[0] > 12):
-			if (self.player_turn == self.PLAYER_ONE):
-				self.player1_done_pieces += 1
-			else:
-				self.player2_far_pieces += 1
-		
-		elif (new_pos[0] > 9):
-			if (self.player_turn == self.PLAYER_ONE):
-				self.player1_advanced_pieces += 1
-			else:
-				self.player2_far_pieces += 1
-		elif (new_pos[0] > 6):
-			if (self.player_turn == self.PLAYER_ONE):
-				self.player1_middle_pieces += 1
-			else:
-				self.player2_middle_pieces += 1
-		elif (new_pos[0] > 4):
-			if (self.player_turn == self.PLAYER_ONE):
-				self.player1_far_pieces += 1
-			else:
-				self.player2_advanced_pieces += 1
-		else:
-			if (self.player_turn == self.PLAYER_ONE):
-				self.player1_far_pieces += 1
-			else:
-				self.player2_done_pieces += 1
-		if (old_pos[0] > 12):
-			if (self.player_turn == self.PLAYER_ONE):
-				self.player1_done_pieces -= 1
-			else:
-				self.player2_far_pieces -= 1
-		elif (old_pos[0] > 9):
-			if (self.player_turn == self.PLAYER_ONE):
-				self.player1_advanced_pieces -= 1
-			else:
-				self.player2_far_pieces -= 1
-		elif (old_pos[0] > 6):
-			if (self.player_turn == self.PLAYER_ONE):
+		if (self.player_turn == 1):
+			if (old_pos[0] < 4):
+				self.player1_start_pieces -= 1
+			elif (old_pos[0] < 7):
+				self.player1_far_pieces -= 1
+			elif (old_pos[0] < 10):
 				self.player1_middle_pieces -= 1
+			elif (old_pos[0] < 13):
+				self.player1_near_pieces -= 1
 			else:
-				self.player2_middle_pieces -= 1
-		elif (old_pos[0] > 4):
-			if (self.player_turn == self.PLAYER_ONE):
-				self.player1_far_pieces -= 1
+				self.player1_end_pieces -= 1
+
+			if (new_pos[0] < 4):
+				self.player1_start_pieces += 1
+			elif (new_pos[0] < 7):
+				self.player1_far_pieces += 1
+			elif (new_pos[0] < 10):
+				self.player1_middle_pieces += 1
+			elif (new_pos[0] < 13):
+				self.player1_near_pieces += 1
 			else:
-				self.player2_advanced_pieces -= 1
+				self.player1_end_pieces += 1
+
 		else:
-			if (self.player_turn == self.PLAYER_ONE):
-				self.player1_far_pieces -= 1
+			if (12 < old_pos[0]):
+				self.player2_start_pieces -= 1
+			elif (9 < old_pos[0]):
+				self.player2_far_pieces -= 1
+			elif (6 < old_pos[0]):
+				self.player2_middle_pieces -= 1
+			elif (3 < old_pos[0] ):
+				self.player2_near_pieces -= 1
 			else:
-				self.player2_done_pieces -= 1
+				self.player2_end_pieces -= 1
+
+			if (12 < new_pos[0]):
+				self.player2_start_pieces += 1
+			elif (9 < new_pos[0]):
+				self.player2_far_pieces += 1
+			elif (6 < new_pos[0]):
+				self.player2_middle_pieces += 1
+			elif (3 < new_pos[0] ):
+				self.player2_near_pieces += 1
+			else:
+				self.player2_end_pieces += 1
+
 	def execute_move(self, id_piece, new_pos):
 		old_pos = self.players_pieces[self.player_turn][id_piece]
 		self.board[old_pos[0]][old_pos[1]] = self.EMPTY
@@ -175,17 +179,18 @@ class Game:
 			self.move_randomly()
 
 	def move_weighted(self):
-		greatest_profit = 0.0
+		greatest_profit = -1.0
 		piece = 0
 		move = [0,0]
 		stop = False
-		i = 1
+		i = 0
 
-		while (not stop and i in range(self.PIECES+1)):
+		while (not stop and i in range(self.PIECES)):
 			possibilities = self.calculate_moves(self.players_pieces[self.PLAYER_ONE][i])
+			print("PIECES: ", str(i), "possibilities: ", str(possibilities))
 			for possible_move in possibilities:
 				current_profit = self.simulate_state(i, possible_move)
-				if (current_profit > 0,79):
+				if (current_profit > 0.59):
 					piece = i
 					move = possible_move
 					stop = True
@@ -193,7 +198,11 @@ class Game:
 				elif (current_profit > greatest_profit):
 					piece = i
 					move = possible_move
+					greatest_profit = current_profit
+
 			i += 1
+		print("current_profit: ", str(current_profit), " piece: ", str(piece), " move: ", str(move))
+		print()
 		self.execute_move(piece, move)
 
 	def simulate_state(self, id_piece, move_to_test):
@@ -201,32 +210,26 @@ class Game:
 		self.update_var(old_pos, move_to_test)
 
 		independent_var = 0
-		player_one_weight = self.player1_done_pieces*0.1 + self.player1_advanced_pieces*0.07 + self.player1_middle_pieces*0.06 + self.player1_far_pieces*0.05
-		player_two_weight = self.player1_done_pieces*(-0.1) + self.player1_advanced_pieces*(-0.07) + self.player1_middle_pieces*(-0.06) + self.player1_far_pieces*(-0.05)
-		
+		player_one_weight = self.player1_end_pieces*0.1 + self.player1_near_pieces*0.075 + self.player1_middle_pieces*0.055 + self.player1_far_pieces*0.035 + self.player1_start_pieces*0.015
+
+		player_two_weight = self.player2_end_pieces*(-0.1) + self.player2_near_pieces*(-0.06) + self.player2_middle_pieces*(-0.04) + self.player2_far_pieces*(-0.02) + self.player2_start_pieces*(0.0015)
+
 		self.update_var(move_to_test, old_pos) # undo 'fake' movement
 
 		return (player_one_weight + player_two_weight + independent_var)
 
 	def game_over(self):
-		i = 0
-		if (self.player_turn == self.PLAYER_ONE):
-			while (i < self.PIECES and self.players_pieces[self.PLAYER_ONE][i][0] > 13):
-				i += 1
-		else:
-			while (i < self.PIECES and self.players_pieces[self.PLAYER_TWO][i][0] < 4):
-				i += 1
-		self.GAME_OVER = i == self.PIECES
-		return self.GAME_OVER
+		return self.player1_end_pieces == self.PIECES or self.player2_end_pieces == self.PIECES
 
 	def save_state(self):
 		file = open(self.name, "a")
 
-		line = ""
-		line += "  In Range (" + str(self.player1_done_pieces) + " | "  + str(self.player2_done_pieces) + ")"
-		line += "  Near (" + str(self.player1_advanced_pieces) + " | " + str(self.player2_advanced_pieces) + ")"
+		line = str(self.move) + " ||||| "
+		line += "  End (" + str(self.player1_end_pieces) + " | "  + str(self.player2_end_pieces) + ")"
+		line += "  Near (" + str(self.player1_near_pieces) + " | " + str(self.player2_near_pieces) + ")"
 		line += "  Medium (" + str(self.player1_middle_pieces) + " | " + str(self.player2_middle_pieces) + ")"
-		line += "  Far (" + str(self.player1_far_pieces) + " | " + str(self.player2_far_pieces) + ")\n"
+		line += "  Far (" + str(self.player1_far_pieces) + " | " + str(self.player2_far_pieces) + ")"
+		line += "  Start (" + str(self.player1_start_pieces) + " | " + str(self.player2_start_pieces) + ")\n"
 		file.write(line)
 
 		if self.GAME_OVER:
@@ -269,8 +272,6 @@ class Game:
 					elif (self.board[position_X_sub][position[1]] != self.INVALID):
 						if(self.verify_jump([position_X_sub - 1,position_Y_sub])):
 							possibilities.append([position_X_sub - 1,position_Y_sub])
-				print(self.player_turn)
-				print(position)
 
 				# Cuarto movimiento posible | derecha arriba
 				if (self.X_MIN < position_X_sub and position_Y_add < self.Y_MAX):
@@ -340,5 +341,4 @@ class Game:
 
 if __name__== "__main__":
 	Test = Game()
-
 	Test.start_game() 
