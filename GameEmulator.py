@@ -87,9 +87,10 @@ class Game:
 			self.game_over()
 			self.move += 1
 
-			self.move_randomly()
-			self.game_over()
-			self.move += 1
+			if (not self.GAME_OVER):
+				self.move_randomly()
+				self.game_over()
+				self.move += 1
 
 	def add(self, var_player1, var_player2):
 		if (self.player_turn == self.PLAYER_ONE):
@@ -214,8 +215,6 @@ class Game:
 
 		if(self.player1_end_pieces == self.PIECES or self.player2_end_pieces == self.PIECES):
 			self.GAME_OVER = True
-
-		return self.GAME_OVER
 
 	def save_state(self):
 		file = open(self.name, "a")
