@@ -94,18 +94,6 @@ class Game:
 				self.move_identifier += 1
 				self.game_over()
 
-	def add(self, var_player1, var_player2):
-		if (self.player_turn == self.PLAYER_ONE):
-			var_player1 += 1
-		else:
-			var_player2 += 1
-
-	def sub(self, var_player1, var_player2):
-		if (self.player_turn == self.PLAYER_ONE):
-			var_player1 -= 1
-		else:
-			var_player2 -= 1				
-
 	def update_var(self, old_pos, new_pos):
 		if (self.player_turn == self.PLAYER_ONE):
 			if (old_pos[0] < 4):
@@ -221,7 +209,7 @@ class Game:
 	def save_state(self):
 		file = open(self.name, "a")
 
-		line = str(self.move_identifier) + "|||||"
+		line = str(self.move_identifier) + "|||"
 		line += "  End (" + str(self.player1_end_pieces) + " | "  + str(self.player2_end_pieces) + ")"
 		line += "  Near (" + str(self.player1_near_pieces) + " | " + str(self.player2_near_pieces) + ")"
 		line += "  Medium (" + str(self.player1_middle_pieces) + " | " + str(self.player2_middle_pieces) + ")"
@@ -234,8 +222,7 @@ class Game:
 				winner = 1
 			else:
 				winner = -1
-			line = str(winner) + "\n"
-			file.write(line)
+			file.write(str(winner) + "\n")
 
 		file.close()
 
