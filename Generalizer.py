@@ -97,7 +97,7 @@ class Generalizer:
 		for line in file:
 			values = line.split('-')
 			values[len(values)-1].replace('\n','')
-			b = list(map(lambda x: int(x), values))
+			b = list(map(lambda x: float(x), values))
 			for i in range(0, len(self.weights)):
 				# w(i) <- w(i) + mu(V_train_(b) - V_aprox_(b))x(i)
 				if i > 0: 

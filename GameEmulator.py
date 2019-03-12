@@ -189,7 +189,7 @@ class Game:
 
 			i += 1
 		#print("current_profit: ", str(current_profit), " piece: ", str(piece), " move: ", str(move))
-		self.profit_reached = greatest_profit
+		#self.profit_reached = greatest_profit
 		self.execute_move(piece, move)
 
 
