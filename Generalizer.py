@@ -1,9 +1,20 @@
+import os, datetime
 class Generalizer:
 	def __init__(self):
-		self.weights = [0.001, 0.1, -0.1, 0.075, -0.075, 0.05, -0.025, -0.025, 0.025, -0.05, 0.05]
+		#self.weights = [0.001, 0.1, -0.1, 0.075, -0.075, 0.05, -0.025, -0.025, 0.025, -0.05, 0.05]
+		self.weights = self.load_initial_weights()
 		self.mu = 0.05
+		self.id_game = 1
 		self.print()
 
+	def load_initial_weights(self):
+		file = open('weights.txt', 'r')
+		all_lines = file.readlines()
+		file.close()
+
+		last = all_lines[-1]
+		values = last.split('|')
+		return (list(map(lambda x: float(x), values)))
 
 	def get_independent_weight(self):
 		return self.weights[0]
@@ -72,10 +83,12 @@ class Generalizer:
 	def set_player2_start_weight(self, value):
 		self.weights[10] = value
 
-
-	def parse_number(s):
-		return int(s)
-
+	def persist_new_weights(self):
+		file = open('weights.txt', 'a')
+		weights_str = list(map(lambda x: str(x), self.weights))
+		line = '|'.join(weights_str) + '\n'
+		file.write(line)
+		file.close()
 
 	def adjust_weights(self, result):
 		file = open('result.txt', 'r')
@@ -84,18 +97,20 @@ class Generalizer:
 		for line in file:
 			values = line.split('-')
 			values[len(values)-1].replace('\n','')
-			if (len(values) > 1):
-				#tuplas_resultado.append(list(map(self.parse_number(),values)))
-				b = list(map(self.parse_number(), values))
-				for j in range(0, len(b)):
-					self.weights[j] = self.weights[j] + mu*( - 1)*tuplas_resultado[i][j]	
-			else:
-				tuplas_resultado[0] = [int(values[0])]
+			b = list(map(lambda x: int(x), values))
+			for i in range(0, len(self.weights)):
+				# w(i) <- w(i) + mu(V_train_(b) - V_aprox_(b))x(i)
+				if i > 0: 
+					self.weights[i] = self.weights[i] + self.mu*(result - b[0])*b[i]
+				else:
+					self.weights[i] = self.weights[i] + self.mu*(result - b[0])*1 #w0
+		file.close()
+		self.persist_new_weights()
 
-		for i in range(1, len(tuplas_resultado)):
-			for j in range(0, len(tuplas_resultado[i])):
-				self.weights[j] = self.weights[j] + mu*(tuplas_resultado[0][0] - 1)*tuplas_resultado[i][j]
- 
+		new_name = 'result' + str(self.id_game) + '_' + str(datetime.datetime.now()).replace(':','_') +  '.txt'
+		self.id_game += 1
+		os.rename('result.txt',new_name)
+
 		self.print()
 
 

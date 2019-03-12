@@ -1,6 +1,7 @@
 import random
 import pdb
 import datetime
+import sys
 from Generalizer import Generalizer
 
 class Game:
@@ -44,7 +45,7 @@ class Game:
 		self.player2_start_pieces = self.PIECES
 
 		self.move_identifier = 0
-
+		self.profit_reached = 0
 
 	def initialize_players_pieces(self):
 		players_pieces = []
@@ -90,6 +91,7 @@ class Game:
 		while not self.GAME_OVER:
 			self.move_weighted()
 			self.move_identifier += 1
+			self.save_state()
 			self.game_over()
 
 			if (not self.GAME_OVER):
@@ -186,7 +188,8 @@ class Game:
 					move = possible_move
 
 			i += 1
-		print("current_profit: ", str(current_profit), " piece: ", str(piece), " move: ", str(move))
+		#print("current_profit: ", str(current_profit), " piece: ", str(piece), " move: ", str(move))
+		self.profit_reached = greatest_profit
 		self.execute_move(piece, move)
 
 
@@ -208,12 +211,13 @@ class Game:
 	def game_over(self):
 		if(self.player1_end_pieces == self.PIECES or self.player2_end_pieces == self.PIECES or self.moves_limit < self.move_identifier):
 			self.GAME_OVER = True
+			self.save_state()
 			if (self.player1_end_pieces == self.PIECES):
 				self.generalizer.adjust_weights(1)
 			else:
 				self.generalizer.adjust_weights(-1)
 
-		self.save_state()
+		#self.save_state()
 
 
 	def save_state(self):
@@ -221,7 +225,8 @@ class Game:
 
 		file = open(self.name, "a")
 
-		line = str(self.player1_end_pieces) + split
+		line = str(self.profit_reached) + split
+		line += str(self.player1_end_pieces) + split
 		line += str(self.player2_end_pieces) + split
 		line += str(self.player1_near_pieces) + split
 		line += str(self.player2_near_pieces) + split
@@ -231,6 +236,7 @@ class Game:
 		line += str(self.player2_far_pieces) + split
 		line += str(self.player1_start_pieces) + split
 		line += str(self.player2_start_pieces) + "\n"
+
 
 		file.write(line)
 		file.close()
@@ -340,5 +346,9 @@ class Game:
 
 
 if __name__== "__main__":
-	Test = Game()
-	Test.start_game() 
+	total_matche = int(sys.argv[1])
+	update_frecuency = int(sys.argv[2])
+	
+	for i in range(total_matche):
+		Test = Game()
+		Test.start_game()
