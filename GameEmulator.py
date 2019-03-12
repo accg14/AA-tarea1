@@ -189,7 +189,7 @@ class Game:
 
 			i += 1
 		#print("current_profit: ", str(current_profit), " piece: ", str(piece), " move: ", str(move))
-		#self.profit_reached = greatest_profit
+		self.profit_reached = greatest_profit
 		self.execute_move(piece, move)
 
 
@@ -221,7 +221,7 @@ class Game:
 
 
 	def save_state(self):
-		split = "-"
+		split = "|"
 
 		file = open(self.name, "a")
 
@@ -346,9 +346,9 @@ class Game:
 
 
 if __name__== "__main__":
-	total_matche = int(sys.argv[1])
+	total_games = int(sys.argv[1])
 	update_frecuency = int(sys.argv[2])
 	
-	for i in range(total_matche):
+	for i in range(total_games):
 		Test = Game()
 		Test.start_game()

@@ -95,7 +95,7 @@ class Generalizer:
 		tuplas_resultado = []
 		tuplas_resultado.append([])
 		for line in file:
-			values = line.split('-')
+			values = line.split('|')
 			values[len(values)-1].replace('\n','')
 			b = list(map(lambda x: float(x), values))
 			for i in range(0, len(self.weights)):
@@ -103,7 +103,7 @@ class Generalizer:
 				if i > 0: 
 					self.weights[i] = self.weights[i] + self.mu*(result - b[0])*b[i]
 				else:
-					self.weights[i] = self.weights[i] + self.mu*(result - b[0])*1 #w0
+					self.weights[i] = self.weights[i] + self.mu*(result - b[0]) #w0
 		file.close()
 		self.persist_new_weights()
 
