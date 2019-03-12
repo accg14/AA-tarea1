@@ -44,6 +44,7 @@ class Game:
 		self.player2_near_pieces = 0
 		self.player2_end_pieces = 0
 
+
 		self.move_identifier = 0
 
 	def initialize_players_pieces(self):
@@ -208,13 +209,19 @@ class Game:
 
 	def save_state(self):
 		file = open(self.name, "a")
+		
+		line = str(self.generalizer.get_independent_weight()) + "-"
+		line += str(self.generalizer.get_player1_start_weight()) + "-"
+		line += str(self.generalizer.get_player1_far_weight()) + "-"
+		line += str(self.generalizer.get_player1_middle_weight()) + "-"
+		line += str(self.generalizer.get_player1_near_weight()) + "-"
+		line += str(self.generalizer.get_player1_end_weight()) + "-"
+		line += str(self.generalizer.get_player2_start_weight()) + "-"
+		line += str(self.generalizer.get_player2_far_weight()) + "-"
+		line += str(self.generalizer.get_player2_middle_weight()) + "-"
+		line += str(self.generalizer.get_player2_near_weight()) + "-"
+		line += str(self.generalizer.get_player2_end_weight()) + "-"
 
-		line = str(self.move_identifier) + "|||"
-		line += "  End (" + str(self.player1_end_pieces) + " | "  + str(self.player2_end_pieces) + ")"
-		line += "  Near (" + str(self.player1_near_pieces) + " | " + str(self.player2_near_pieces) + ")"
-		line += "  Medium (" + str(self.player1_middle_pieces) + " | " + str(self.player2_middle_pieces) + ")"
-		line += "  Far (" + str(self.player1_far_pieces) + " | " + str(self.player2_far_pieces) + ")"
-		line += "  Start (" + str(self.player1_start_pieces) + " | " + str(self.player2_start_pieces) + ")\n"
 		file.write(line)
 
 		if self.GAME_OVER:
