@@ -97,7 +97,10 @@ class Generalizer:
 			values = line.split('-')
 			values[len(values)-1].replace('\n','')
 			if (len(values) > 1):
-				tuplas_resultado.append(list(map(self.parse_number(),values)))
+				#tuplas_resultado.append(list(map(self.parse_number(),values)))
+				b = list(map(self.parse_number(),values)) # [1, 2, 3, 4, 5, ..., 11,]
+				for j in range(0, len(b)):
+					self.weights[j] = self.weights[j] + mu*( - 1)*tuplas_resultado[i][j]	
 			else:
 				tuplas_resultado[0] = [int(values[0])]
 
