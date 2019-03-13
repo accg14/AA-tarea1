@@ -90,8 +90,15 @@ class Generalizer:
 		file.write(line)
 		file.close()
 
-	def adjust_mu(self,result):
-		file = open('result.txt', 'r')
+	def persist_metrics(games):
+		file = open('metric_results.txt', 'a')
+		metric_str = list(map(lambda x: str(x), games))
+		line = '|'.join(weights_str) + '\n'
+		file.write(line)
+		file.close()		
+
+	def adjust_mu(self,result,filename):
+		file = open(filename, 'r')
 		sum_error = 0
 		sample_size = 0
 		for line in file:
@@ -113,14 +120,43 @@ class Generalizer:
 
 		final_error = sum_error / sample_size
 		if (final_error < 0,3):
-			self.mu = 0,3
+			return 0.03
 		elif (final_error < 0,6):
-			self.mu = 0,6
+			return 0.06
 		else:
-			self.mu = 0,9
+			return 0.09
+
+	def adjust_weights(self,result):
+		mu_values = []
+		for r in result:
+			mu_values.append(self.adjust_mu(r[0],r[1]))
+		self.mu = sum(mu_values)/len(mu_values)
+
+		games = []
+		for r in result:
+			file = open(r[1], 'r')
+			if (int(r[0]) == 1):
+				games[0] += 1
+			else:
+				games[1] += 1
+			for line in file:
+				values = line.split('|')
+				values[len(values)-1].replace('\n','')
+				b = list(map(lambda x: float(x), values))
+				for i in range(0, len(self.weights)):
+					# w(i) <- w(i) + mu(V_train_(b) - V_aprox_(b))x(i)
+					if i > 0: 
+						self.weights[i] = self.weights[i] + self.mu*(result - b[0])*b[i]
+					else:
+						self.weights[i] = self.weights[i] + self.mu*(result - b[0]) #w0
+			file.close()
+		self.persist_metrics()
+		self.persist_new_weights(games)
+
+
 
 	def adjust_weights(self, result):
-		self.adjust_mu(result)
+		#self.adjust_mu(result)
 		file = open('result.txt', 'r')
 		tuplas_resultado = []
 		tuplas_resultado.append([])
