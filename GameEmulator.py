@@ -1,6 +1,6 @@
-import random
-import pdb
 import datetime
+import pdb
+import random
 import sys
 from Generalizer import Generalizer
 
@@ -22,37 +22,17 @@ class Game:
 	PLAYER_1_X_WIN = 12
 	PLAYER_2_X_WIN = 4
 
+	LIMIT_MOVE = 500
 
-	def __init__(self):
+	FILE_NAME = "result"
+	FILE_EXTENSION = ".txt"
+
+
+	def __init__(self, limit_game, update_frequency):
 		self.generalizer = Generalizer()
 
-		self.name = "result.txt" 
-		self.player_turn = self.PLAYER_ONE
-
-		self.board = self.create_board()
-		self.players_pieces = self.initialize_players_pieces()
-		self.moves_limit = 50000
-
-		self.player1_end_pieces = self.EMPTY
-		self.player2_end_pieces = self.EMPTY
-		self.player1_near_pieces = self.EMPTY
-		self.player2_near_pieces = self.EMPTY
-		self.player1_middle_pieces = self.EMPTY
-		self.player2_middle_pieces = self.EMPTY
-		self.player1_far_pieces = self.EMPTY
-		self.player2_far_pieces = self.EMPTY
-		self.player1_start_pieces = self.PIECES
-		self.player2_start_pieces = self.PIECES
-
-		self.move_identifier = 0
-		self.profit_reached = 0
-
-	def initialize_players_pieces(self):
-		players_pieces = []
-		players_pieces.append([])
-		players_pieces.append([[0,4], [1,4], [1,5], [2,3], [2,4], [2,5], [3,2], [3,3], [3,4], [3,5]])
-		players_pieces.append([[16,4], [15,4], [15,5], [14,3], [14,4], [14,5], [13,2], [13,3], [13,5], [13,5]])
-		return players_pieces
+		self.LIMIT_GAME = limit_game
+		self.UPDATE_FREQUENCY = update_frequency
 
 
 	def create_board_line(self, start, end, value):
@@ -87,17 +67,54 @@ class Game:
 		return board
 
 
-	def start_game(self):
-		while not self.GAME_OVER:
-			self.move_weighted()
-			self.move_identifier += 1
-			self.save_state()
-			self.game_over()
+	def initialize_pieces_position(self):
+		self.profit_reached = 0
+		self.player1_end_pieces = self.EMPTY
+		self.player2_end_pieces = self.EMPTY
+		self.player1_near_pieces = self.EMPTY
+		self.player2_near_pieces = self.EMPTY
+		self.player1_middle_pieces = self.EMPTY
+		self.player2_middle_pieces = self.EMPTY
+		self.player1_far_pieces = self.EMPTY
+		self.player2_far_pieces = self.EMPTY
+		self.player1_start_pieces = self.PIECES
+		self.player2_start_pieces = self.PIECES
 
-			if (not self.GAME_OVER):
-				self.move_randomly()
+
+	def initialize_players_pieces(self):
+		players_pieces = []
+		players_pieces.append([])
+		players_pieces.append([[0,4], [1,4], [1,5], [2,3], [2,4], [2,5], [3,2], [3,3], [3,4], [3,5]])
+		players_pieces.append([[16,4], [15,4], [15,5], [14,3], [14,4], [14,5], [13,2], [13,3], [13,5], [13,5]])
+		return players_pieces
+
+
+	def start_game(self):
+		self.adjust_array = []
+		self.game_identifier = 0
+
+		while (self.game_identifier < self.LIMIT_GAME):
+			self.file_name = self.FILE_NAME + str(self.game_identifier) + self.FILE_EXTENSION
+			self.board = self.create_board()
+			self.initialize_pieces_position()
+			self.players_pieces = self.initialize_players_pieces()
+
+			self.player_turn = self.PLAYER_ONE
+
+			self.move_identifier = 0
+
+			while not self.GAME_OVER:
+				self.move_weighted()
 				self.move_identifier += 1
+				self.save_state()
 				self.game_over()
+
+				if (not self.GAME_OVER):
+					self.move_randomly()
+					self.move_identifier += 1
+					self.game_over()
+
+			self.game_identifier += 1
 
 
 	def update_var(self, old_pos, new_pos):
@@ -179,7 +196,6 @@ class Game:
 
 		while (not stop and i in range(self.PIECES)):
 			possibilities = self.calculate_moves(self.players_pieces[self.PLAYER_ONE][i])
-			print("PIECES: ", str(i), "possibilities: ", str(possibilities))
 			for possible_move in possibilities:
 				current_profit = self.simulate_state(i, possible_move)
 				if (current_profit > greatest_profit):
@@ -188,7 +204,7 @@ class Game:
 					move = possible_move
 
 			i += 1
-		#print("current_profit: ", str(current_profit), " piece: ", str(piece), " move: ", str(move))
+		print("MOVE: ", str(self.move_identifier), "current_profit: ", str(current_profit))
 		self.profit_reached = greatest_profit
 		self.execute_move(piece, move)
 
@@ -209,21 +225,23 @@ class Game:
 
 
 	def game_over(self):
-		if(self.player1_end_pieces == self.PIECES or self.player2_end_pieces == self.PIECES or self.moves_limit < self.move_identifier):
+		if(self.player1_end_pieces == self.PIECES or self.player2_end_pieces == self.PIECES or self.LIMIT_MOVE < self.move_identifier):
 			self.GAME_OVER = True
 			self.save_state()
-			if (self.player1_end_pieces == self.PIECES):
-				self.generalizer.adjust_weights(1)
-			else:
-				self.generalizer.adjust_weights(-1)
 
-		#self.save_state()
+			if (self.player1_end_pieces == self.PIECES):
+				self.adjust_array.append([1,self.file_name])
+			else:
+				self.adjust_array.append([-1,self.file_name])
+
+			if not (self.game_identifier % self.UPDATE_FREQUENCY):
+				self.generalizer.adjust_weights(self.adjust_array)
 
 
 	def save_state(self):
 		split = "|"
 
-		file = open(self.name, "a")
+		file = open(self.file_name, "a")
 
 		line = str(self.profit_reached) + split
 		line += str(self.player1_end_pieces) + split
@@ -236,7 +254,6 @@ class Game:
 		line += str(self.player2_far_pieces) + split
 		line += str(self.player1_start_pieces) + split
 		line += str(self.player2_start_pieces) + "\n"
-
 
 		file.write(line)
 		file.close()
@@ -346,9 +363,5 @@ class Game:
 
 
 if __name__== "__main__":
-	total_games = int(sys.argv[1])
-	update_frecuency = int(sys.argv[2])
-	
-	for i in range(total_games):
-		Test = Game()
-		Test.start_game()
+	Test = Game(int(sys.argv[1]), int(sys.argv[2]))
+	Test.start_game()
