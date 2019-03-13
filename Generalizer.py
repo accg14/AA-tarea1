@@ -1,4 +1,4 @@
-import os, datetime
+import os, datetime, numpy, pdb
 class Generalizer:
 	def __init__(self):
 		#self.weights = [0.001, 0.1, -0.1, 0.075, -0.075, 0.05, -0.025, -0.025, 0.025, -0.05, 0.05]
@@ -90,7 +90,37 @@ class Generalizer:
 		file.write(line)
 		file.close()
 
+	def adjust_mu(self,result):
+		file = open('result.txt', 'r')
+		sum_error = 0
+		sample_size = 0
+		for line in file:
+			sample_size += 1
+			values = line.split('|')
+			values[len(values)-1].replace('\n','')
+			
+			tuple = list(map(lambda x: float(x), values)) # all values
+			difference = numpy.power(result-tuple[0],2)
+			
+			i = 1
+			norm = 0
+			for i in range(len(tuple)):
+				norm += numpy.power(tuple[i],2)
+			norm = numpy.sqrt(norm)
+
+			sum_error += difference / norm
+		file.close()
+
+		final_error = sum_error / sample_size
+		if (final_error < 0,3):
+			self.mu = 0,3
+		elif (final_error < 0,6):
+			self.mu = 0,6
+		else:
+			self.mu = 0,9
+
 	def adjust_weights(self, result):
+		self.adjust_mu(result)
 		file = open('result.txt', 'r')
 		tuplas_resultado = []
 		tuplas_resultado.append([])
