@@ -1,7 +1,6 @@
-import os, datetime
+import os, datetime, numpy, pdb
 class Generalizer:
 	def __init__(self):
-		#self.weights = [0.001, 0.1, -0.1, 0.075, -0.075, 0.05, -0.025, -0.025, 0.025, -0.05, 0.05]
 		self.weights = self.load_initial_weights()
 		self.mu = 0.05
 		self.id_game = 1
@@ -13,6 +12,7 @@ class Generalizer:
 		file.close()
 
 		last = all_lines[-1]
+		print(last)
 		values = last.split('|')
 		return (list(map(lambda x: float(x), values)))
 
@@ -90,28 +90,70 @@ class Generalizer:
 		file.write(line)
 		file.close()
 
-	def adjust_weights(self, result):
-		file = open('result.txt', 'r')
-		tuplas_resultado = []
-		tuplas_resultado.append([])
+	def persist_metrics(_, games):
+		file = open('metric_results.txt', 'a')
+		metric_str = list(map(lambda x: str(x), games))
+		line = '|'.join(metric_str) + '\n'
+		file.write(line)
+		file.close()		
+
+
+	def adjust_mu(self,result,filename):
+		file = open(filename, 'r')
+		sum_error = 0
+		sample_size = 0
 		for line in file:
+			sample_size += 1
 			values = line.split('|')
 			values[len(values)-1].replace('\n','')
-			b = list(map(lambda x: float(x), values))
-			for i in range(0, len(self.weights)):
-				# w(i) <- w(i) + mu(V_train_(b) - V_aprox_(b))x(i)
-				if i > 0: 
-					self.weights[i] = self.weights[i] + self.mu*(result - b[0])*b[i]
-				else:
-					self.weights[i] = self.weights[i] + self.mu*(result - b[0]) #w0
+			
+			tuple = list(map(lambda x: float(x), values)) # all values
+			difference = numpy.power(result-tuple[0],2)
+			
+			i = 1
+			norm = 0
+			for i in range(len(tuple)):
+				norm += numpy.power(tuple[i],2)
+			norm = numpy.sqrt(norm)
+
+			sum_error += difference / norm
 		file.close()
+
+		final_error = sum_error / sample_size
+		if (final_error < 0,3):
+			return 0.03
+		elif (final_error < 0,6):
+			return 0.06
+		else:
+			return 0.09
+
+
+	def adjust_weights(self,result):
+		mu_values = []
+		for r in result:
+			mu_values.append(self.adjust_mu(r[0],r[1]))
+		self.mu = sum(mu_values)/len(mu_values)
+
+		games = [0, 0]
+		for r in result:
+			file = open(r[1], 'r')
+			if (int(r[0]) == 1):
+				games[0] += 1
+			else:
+				games[1] += 1
+			for line in file:
+				values = line.split('|')
+				values[len(values)-1].replace('\n','')
+				b = list(map(lambda x: float(x), values))
+				for i in range(0, len(self.weights)):
+					# w(i) <- w(i) + mu(V_train_(b) - V_aprox_(b))x(i)
+					if i > 0: 
+						self.weights[i] = self.weights[i] + self.mu*(r[0] - b[0])*b[i]
+					else:
+						self.weights[i] = self.weights[i] + self.mu*(r[0] - b[0]) #w0
+			file.close()
+		self.persist_metrics(games)
 		self.persist_new_weights()
-
-		new_name = 'result' + str(self.id_game) + '_' + str(datetime.datetime.now()).replace(':','_') +  '.txt'
-		self.id_game += 1
-		os.rename('result.txt',new_name)
-
-		self.print()
 
 
 	def print(self):

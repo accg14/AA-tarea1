@@ -1,12 +1,7 @@
-import datetime
-import pdb
-import random
-import sys
+import datetime, pdb, random, sys
 from Generalizer import Generalizer
 
 class Game:
-	GAME_OVER = False
-
 	PLAYER_ONE = 1
 	PLAYER_TWO = 2
 
@@ -22,7 +17,7 @@ class Game:
 	PLAYER_1_X_WIN = 12
 	PLAYER_2_X_WIN = 4
 
-	LIMIT_MOVE = 500
+	LIMIT_MOVE = 100
 
 	FILE_NAME = "result"
 	FILE_EXTENSION = ".txt"
@@ -31,7 +26,7 @@ class Game:
 	def __init__(self, limit_game, update_frequency):
 		self.generalizer = Generalizer()
 
-		self.LIMIT_GAME = limit_game
+		self.LIMIT_GAME = limit_game + 1
 		self.UPDATE_FREQUENCY = update_frequency
 
 
@@ -91,13 +86,15 @@ class Game:
 
 	def start_game(self):
 		self.adjust_array = []
-		self.game_identifier = 0
+		self.game_identifier = 1
 
 		while (self.game_identifier < self.LIMIT_GAME):
 			self.file_name = self.FILE_NAME + str(self.game_identifier) + self.FILE_EXTENSION
 			self.board = self.create_board()
 			self.initialize_pieces_position()
 			self.players_pieces = self.initialize_players_pieces()
+
+			self.GAME_OVER = False
 
 			self.player_turn = self.PLAYER_ONE
 
@@ -234,8 +231,9 @@ class Game:
 			else:
 				self.adjust_array.append([-1,self.file_name])
 
-			if not (self.game_identifier % self.UPDATE_FREQUENCY):
+			if (self.game_identifier % self.UPDATE_FREQUENCY == 0):
 				self.generalizer.adjust_weights(self.adjust_array)
+				self.adjust_array = []
 
 
 	def save_state(self):
