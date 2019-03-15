@@ -121,11 +121,11 @@ class Generalizer:
 
 		final_error = sum_error / sample_size
 		if (final_error < 0,3):
-			return 0.03
+			return 0.003
 		elif (final_error < 0,6):
-			return 0.06
+			return 0.006
 		else:
-			return 0.09
+			return 0.009
 
 
 	def adjust_weights(self,result):
@@ -151,6 +151,14 @@ class Generalizer:
 						self.weights[i] = self.weights[i] + self.mu*(r[0] - b[0])*b[i]
 					else:
 						self.weights[i] = self.weights[i] + self.mu*(r[0] - b[0]) #w0
+			norm = 0
+			for w in self.weights:
+				norm += numpy.power(w,2)
+			norm = numpy.sqrt(norm)
+
+			for i in range(len(self.weights)):
+				self.weights[i] /= norm
+
 			file.close()
 		self.persist_metrics(games)
 		self.persist_new_weights()

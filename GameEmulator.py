@@ -17,7 +17,7 @@ class Game:
 	PLAYER_1_X_WIN = 12
 	PLAYER_2_X_WIN = 4
 
-	LIMIT_MOVE = 100
+	LIMIT_MOVE = 200000
 
 	FILE_NAME = "result"
 	FILE_EXTENSION = ".txt"
@@ -185,23 +185,20 @@ class Game:
 
 
 	def move_weighted(self):
-		greatest_profit = -1.0
-		piece = 0
-		move = [0,0]
-		stop = False
-		i = 0
+		init = False
 
-		while (not stop and i in range(self.PIECES)):
+		for i in range(0,self.PIECES):
 			possibilities = self.calculate_moves(self.players_pieces[self.PLAYER_ONE][i])
 			for possible_move in possibilities:
 				current_profit = self.simulate_state(i, possible_move)
-				if (current_profit > greatest_profit):
+				if (not init or current_profit > greatest_profit):
+					init = True
 					greatest_profit = current_profit
 					piece = i
 					move = possible_move
 
-			i += 1
-		print("MOVE: ", str(self.move_identifier), "current_profit: ", str(current_profit))
+		print("PIECE: ", piece, " MOVE: ", str(self.move_identifier), " greatest_profit: ", str(greatest_profit))
+		
 		self.profit_reached = greatest_profit
 		self.execute_move(piece, move)
 
@@ -212,14 +209,24 @@ class Game:
 		# Simulates 'fake' movement
 		self.update_var(old_pos, move_to_test)
 
-		player_one_weight = self.player1_end_pieces*self.generalizer.get_player1_end_weight() + self.player1_near_pieces*self.generalizer.get_player1_near_weight() + self.player1_middle_pieces*self.generalizer.get_player1_middle_weight() + self.player1_far_pieces*self.generalizer.get_player1_far_weight() + self.player1_start_pieces*self.generalizer.get_player1_start_weight()
-		player_two_weight = self.player2_end_pieces*self.generalizer.get_player2_end_weight() + self.player2_near_pieces*self.generalizer.get_player2_near_weight() + self.player2_middle_pieces*self.generalizer.get_player2_middle_weight() + self.player2_far_pieces*self.generalizer.get_player2_far_weight() + self.player2_start_pieces*self.generalizer.get_player2_start_weight()
+		if (self.player1_end_pieces == self.PIECES):
+			player_one_weight = 1
+			player_two_weight = 0
+		elif (self.player2_end_pieces == self.PIECES):
+			player_one_weight = 0
+			player_two_weight = -1
+		else:
+			player_one_weight = self.player1_end_pieces*self.generalizer.get_player1_end_weight() + self.player1_near_pieces*self.generalizer.get_player1_near_weight() + self.player1_middle_pieces*self.generalizer.get_player1_middle_weight() + self.player1_far_pieces*self.generalizer.get_player1_far_weight() + self.player1_start_pieces*self.generalizer.get_player1_start_weight()
+			
+			player_two_weight = self.player2_end_pieces*self.generalizer.get_player2_end_weight() + self.player2_near_pieces*self.generalizer.get_player2_near_weight() + self.player2_middle_pieces*self.generalizer.get_player2_middle_weight() + self.player2_far_pieces*self.generalizer.get_player2_far_weight() + self.player2_start_pieces*self.generalizer.get_player2_start_weight()
 
 		# Undo 'fake' movement
 		self.update_var(move_to_test, old_pos)
 
-		return (player_one_weight + player_two_weight + self.generalizer.get_independent_weight())
-
+		if(player_one_weight == 1 or player_two_weight == -1):
+			return (player_one_weight + player_two_weight)
+		else:
+			return (player_one_weight + player_two_weight + self.generalizer.get_independent_weight())
 
 	def game_over(self):
 		if(self.player1_end_pieces == self.PIECES or self.player2_end_pieces == self.PIECES or self.LIMIT_MOVE < self.move_identifier):
