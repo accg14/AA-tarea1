@@ -190,6 +190,7 @@ class Game:
 		for i in range(0,self.PIECES):
 			possibilities = self.calculate_moves(self.players_pieces[self.PLAYER_ONE][i])
 			for possible_move in possibilities:
+				#print(possibilities)
 				current_profit = self.simulate_state(i, possible_move)
 				if (not init or current_profit > greatest_profit):
 					init = True
@@ -197,8 +198,9 @@ class Game:
 					piece = i
 					move = possible_move
 
-		print("PIECE: ", piece, " MOVE: ", str(self.move_identifier), " greatest_profit: ", str(greatest_profit))
-		
+		#if (self.move_identifier > 10000):
+		#print("PIECE: ", piece, " MOVE: ", str(self.move_identifier), " greatest_profit: ", str(greatest_profit))
+		#print(self.players_pieces[1])
 		self.profit_reached = greatest_profit
 		self.execute_move(piece, move)
 
@@ -267,26 +269,42 @@ class Game:
 	def calculate_moves(self, position):
 		possibilities = []
 
+		#if (position[0] > 0):
 		position_X_sub = position[0] - 1
+		#else:
+		#position_X_sub = position[0]
+		#if (position[0] < 16):
 		position_X_add = position[0] + 1
+		#else:
+		#position_X_add = position[0]
+		#if (position[1] > 0):
 		position_Y_sub = position[1] - 1
+		#else:
+		#position_Y_sub = position[1]
+		#if (position[1] < 8):
 		position_Y_add = position[1] + 1
+		#else:
+		#position_Y_add = position[1]
 
 		# Primer movimiento posible | izquierda
 		if (self.Y_MIN < position_Y_sub):
 			if (self.board[position[0]][position_Y_sub] == 0):
 				possibilities.append([position[0],position_Y_sub])
+				#pdb.set_trace()
 			elif (self.board[position[0]][position_Y_sub] != self.INVALID):
-				if(self.verify_jump([position[0],position_Y_sub - 1])):
+				if((self.Y_MIN < position_Y_sub - 1) and self.verify_jump([position[0],position_Y_sub - 1])):
 					possibilities.append([position[0],position_Y_sub - 1])
+					#pdb.set_trace()
 
 		# Segundo movimiento posible | derecha
 		if (position_Y_add < self.Y_MAX):
 			if (self.board[position[0]][position_Y_add] == 0):
 				possibilities.append([position[0],position_Y_add])
-			elif (self.board[position[0]][position_Y_add] != self.INVALID):
+				#pdb.set_trace()
+			elif ((self.Y_MAX > position_Y_add + 1) and self.board[position[0]][position_Y_add] != self.INVALID):
 				if(self.verify_jump([position[0],position_Y_add + 1])):
 					possibilities.append([position[0],position_Y_add + 1])
+					#pdb.set_trace()
 
 		# Si la fila es multiplo de 2
 		if (position[0] % 2 == 0):
@@ -295,34 +313,42 @@ class Game:
 				if (self.X_MIN < position_X_sub):
 					if (self.board[position_X_sub][position[1]] == 0):
 						possibilities.append([position_X_sub,position[1]])
+						#pdb.set_trace()
 					elif (self.board[position_X_sub][position[1]] != self.INVALID):
-						if(self.verify_jump([position_X_sub - 1,position_Y_sub])):
+						if((self.X_MIN < position_X_sub - 1) and self.verify_jump([position_X_sub - 1,position_Y_sub])):
 							possibilities.append([position_X_sub - 1,position_Y_sub])
+							#pdb.set_trace()
 
 				# Cuarto movimiento posible | derecha arriba
 				if (self.X_MIN < position_X_sub and position_Y_add < self.Y_MAX):
 					if (self.board[position_X_sub][position_Y_add] == 0):
 						possibilities.append([position_X_sub,position_Y_add])
+						#pdb.set_trace()
 					elif (self.board[position_X_sub][position_Y_add] != self.INVALID):
-						if(self.verify_jump([position_X_sub - 1,position_Y_add])):
+						if((self.X_MIN < position_X_sub - 1) and self.verify_jump([position_X_sub - 1,position_Y_add])):
 							possibilities.append([position_X_sub - 1,position_Y_add])
+							#pdb.set_trace()
 
 			if not (self.player_turn == self.PLAYER_TWO and position[0] < self.PLAYER_2_X_WIN):
 				# Quinto movimiento posible | izquierda abajo
 				if (position_X_add < self.X_MAX):
 					if (self.board[position_X_add][position[1]] == 0):
 						possibilities.append([position_X_add,position[1]])
+						#pdb.set_trace()
 					elif (self.board[position_X_add][position[1]] != self.INVALID):
-						if(self.verify_jump([position_X_add + 1,position_Y_sub])):
+						if((self.X_MAX > position_X_add + 1) and self.verify_jump([position_X_add + 1,position_Y_sub])):
 							possibilities.append([position_X_add + 1,position_Y_sub])
+							#pdb.set_trace()
 
 				# Sexto movimiento posible | derecha abajo
 				if (position_X_add < self.X_MAX and position_Y_add < self.Y_MAX):
 					if (self.board[position_X_add][position_Y_add] == 0):
 						possibilities.append([position_X_add,position_Y_add])
+						#pdb.set_trace()
 					elif (self.board[position_X_add][position_Y_add] != self.INVALID):
-						if(self.verify_jump([position_X_add + 1,position_Y_add])):
+						if((self.X_MAX > position_X_add + 1) and self.verify_jump([position_X_add + 1,position_Y_add])):
 							possibilities.append([position_X_add + 1,position_Y_add])
+							#pdb.set_trace()
 
 		# Si la fila no es multiplo de 2
 		else:
@@ -331,35 +357,43 @@ class Game:
 				if (self.X_MIN < position_X_sub and self.Y_MIN < position_Y_sub):
 					if (self.board[position_X_sub][position_Y_sub] == 0):
 						possibilities.append([position_X_sub,position_Y_sub])
+						#pdb.set_trace()
 					elif (self.board[position_X_sub][position_Y_sub] != self.INVALID):
-						if(self.verify_jump([position_X_sub - 1,position_Y_sub])):
+						if((self.X_MIN < position_X_sub -1) and self.verify_jump([position_X_sub - 1,position_Y_sub])):
 							possibilities.append([position_X_sub - 1,position_Y_sub])
+							#pdb.set_trace()
 
 				# Cuarto movimiento posible | derecha arriba
 				if (self.X_MIN < position_X_sub):
 					if (self.board[position_X_sub][position[1]] == 0):
 						possibilities.append([position_X_sub,position[1]])
+						#pdb.set_trace()
 					elif (self.board[position_X_sub][position[1]] != self.INVALID):
-						if(self.verify_jump([position_X_sub - 1,position_Y_add])):
+						if((self.X_MIN < position_X_sub - 1) and self.verify_jump([position_X_sub - 1,position_Y_add])):
 							possibilities.append([position_X_sub - 1,position_Y_add])
+							#pdb.set_trace()
 
 			if not (self.player_turn == self.PLAYER_TWO and position[0] < self.PLAYER_2_X_WIN):
 				# Quinto movimiento posible | izquierda abajo
 				if (position_X_add < self.X_MAX and self.Y_MIN < position_Y_sub):
 					if (self.board[position_X_add][position_Y_sub] == 0):
 						possibilities.append([position_X_add,position_Y_sub])
+						#pdb.set_trace()
 					elif (self.board[position_X_add][position_Y_sub] != self.INVALID):
-						if(self.verify_jump([position_X_add + 1,position_Y_sub])):
+						if((self.X_MAX > position_X_add + 1) and self.verify_jump([position_X_add + 1,position_Y_sub])):
 							possibilities.append([position_X_add + 1,position_Y_sub])
+							#pdb.set_trace()
 
 				# Sexto movimiento posible | derecha abajo
 				if (position_X_add < self.X_MAX):
 					if (self.board[position_X_add][position[1]] == 0):
 						possibilities.append([position_X_add,position[1]])
+						#pdb.set_trace()
 					elif (self.board[position_X_add][position[1]] != self.INVALID):
-						if(self.verify_jump([position_X_add + 1,position_Y_add])):
+						if((self.X_MAX > position_X_add +1) and self.verify_jump([position_X_add + 1,position_Y_add])):
 							possibilities.append([position_X_add + 1,position_Y_add])
-
+							#pdb.set_trace()
+		#pdb.set_trace()
 		return possibilities
 
 
