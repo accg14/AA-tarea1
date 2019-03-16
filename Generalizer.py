@@ -2,7 +2,7 @@ import os, datetime, numpy, pdb
 class Generalizer:
 	def __init__(self):
 		self.weights = self.load_initial_weights()
-		self.mu = 0.05
+		self.mu = 0.000000005
 		self.id_game = 1
 		self.print()
 

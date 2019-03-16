@@ -14,6 +14,8 @@ class Game:
 	Y_MAX = 9
 	Y_MIN = -1
 
+	REAL_MIN = 0
+
 	PLAYER_1_X_WIN = 12
 	PLAYER_2_X_WIN = 4
 
@@ -23,11 +25,12 @@ class Game:
 	FILE_EXTENSION = ".txt"
 
 
-	def __init__(self, limit_game, update_frequency):
+	def __init__(self, limit_game, update_frequency, game_type):
 		self.generalizer = Generalizer()
 
 		self.LIMIT_GAME = limit_game + 1
 		self.UPDATE_FREQUENCY = update_frequency
+		self.GAME_TYPE = game_type
 
 
 	def create_board_line(self, start, end, value):
@@ -79,8 +82,8 @@ class Game:
 	def initialize_players_pieces(self):
 		players_pieces = []
 		players_pieces.append([])
-		players_pieces.append([[0,4], [1,4], [1,5], [2,3], [2,4], [2,5], [3,2], [3,3], [3,4], [3,5]])
-		players_pieces.append([[16,4], [15,4], [15,5], [14,3], [14,4], [14,5], [13,2], [13,3], [13,5], [13,5]])
+		players_pieces.append([[0,4], [1,4], [1,5], [2,3], [2,4], [2,5], [3,3], [3,4], [3,5], [3,6]])
+		players_pieces.append([[16,4], [15,4], [15,5], [14,3], [14,4], [14,5], [13,3], [13,4], [13,5], [13,6]])
 		return players_pieces
 
 
@@ -100,16 +103,28 @@ class Game:
 
 			self.move_identifier = 0
 
-			while not self.GAME_OVER:
-				self.move_weighted()
-				self.move_identifier += 1
-				self.save_state()
-				self.game_over()
-
-				if (not self.GAME_OVER):
-					self.move_randomly()
+			if (self.GAME_TYPE):
+				while not self.GAME_OVER:
+					self.move_weighted()
 					self.move_identifier += 1
+					self.save_state()
 					self.game_over()
+
+					if (not self.GAME_OVER):
+						self.move_weighted_outdated()
+						self.move_identifier += 1
+						self.game_over()
+			else:
+				while not self.GAME_OVER:
+					self.move_weighted()
+					self.move_identifier += 1
+					self.save_state()
+					self.game_over()
+
+					if (not self.GAME_OVER):
+						self.move_randomly()
+						self.move_identifier += 1
+						self.game_over()
 
 			self.game_identifier += 1
 
@@ -178,7 +193,7 @@ class Game:
 		id_piece = random.randint(0, self.PIECES - 1)
 		possibilities = self.calculate_moves(self.players_pieces[self.player_turn][id_piece])
 		if possibilities:
-			new_pos = possibilities[random.randint(0,len(possibilities)- 1)]
+			new_pos = possibilities[random.randint(0, len(possibilities)- 1)]
 			self.execute_move(id_piece, new_pos)
 		else:
 			self.move_randomly()
@@ -186,23 +201,59 @@ class Game:
 
 	def move_weighted(self):
 		init = False
+		base = random.randint(0, self.PIECES - 1)
+		moves = []
 
-		for i in range(0,self.PIECES):
-			possibilities = self.calculate_moves(self.players_pieces[self.PLAYER_ONE][i])
+		for i in range(0, self.PIECES):
+			selected_piece = (base + i) % self.PIECES
+			possibilities = self.calculate_moves(self.players_pieces[self.PLAYER_ONE][selected_piece])
 			for possible_move in possibilities:
-				#print(possibilities)
-				current_profit = self.simulate_state(i, possible_move)
-				if (not init or current_profit > greatest_profit):
+				current_profit = self.simulate_state(selected_piece, possible_move)
+				if (not init):
 					init = True
 					greatest_profit = current_profit
-					piece = i
-					move = possible_move
+					moves.append([selected_piece, possible_move])
 
-		#if (self.move_identifier > 10000):
-		#print("PIECE: ", piece, " MOVE: ", str(self.move_identifier), " greatest_profit: ", str(greatest_profit))
-		#print(self.players_pieces[1])
+				elif (current_profit > greatest_profit):
+					greatest_profit = current_profit
+					moves = [[selected_piece, possible_move]]
+
+				elif (current_profit == greatest_profit):
+					moves.append([selected_piece, possible_move])
+
+		self.print_board()
+
 		self.profit_reached = greatest_profit
-		self.execute_move(piece, move)
+		
+		print(moves)
+		if (1 < len(moves)):
+			chosen = random.randint(0, len(moves) - 1)
+			self.execute_move(moves[chosen][0], moves[chosen][1])
+			print("PIECE: ", moves[chosen][0], " MOVE: ", moves[chosen][1])
+		else:
+			self.execute_move(moves[0][0], moves[0][1])
+
+
+
+	def print_board(self):
+		print("----------")
+		printable = ""
+		for x in range(self.REAL_MIN, self.X_MAX):
+			if(x % 2 == 0):
+				printable += " ["
+			else:
+				printable += "["
+			for y in range(self.REAL_MIN, self.Y_MAX):
+				if(self.board[x][y] == self.INVALID):
+					printable += "9,"
+				else:
+					printable += str(self.board[x][y])
+					printable += ","
+			printable += "]\n"
+		print(printable)
+
+	def move_weighted_outdated():
+		print('hola')
 
 
 	def simulate_state(self, id_piece, move_to_test):
@@ -240,7 +291,7 @@ class Game:
 			else:
 				self.adjust_array.append([-1,self.file_name])
 
-			if (self.game_identifier % self.UPDATE_FREQUENCY == 0):
+			if not (self.game_identifier % self.UPDATE_FREQUENCY):
 				self.generalizer.adjust_weights(self.adjust_array)
 				self.adjust_array = []
 
@@ -269,42 +320,26 @@ class Game:
 	def calculate_moves(self, position):
 		possibilities = []
 
-		#if (position[0] > 0):
 		position_X_sub = position[0] - 1
-		#else:
-		#position_X_sub = position[0]
-		#if (position[0] < 16):
 		position_X_add = position[0] + 1
-		#else:
-		#position_X_add = position[0]
-		#if (position[1] > 0):
 		position_Y_sub = position[1] - 1
-		#else:
-		#position_Y_sub = position[1]
-		#if (position[1] < 8):
 		position_Y_add = position[1] + 1
-		#else:
-		#position_Y_add = position[1]
 
 		# Primer movimiento posible | izquierda
 		if (self.Y_MIN < position_Y_sub):
 			if (self.board[position[0]][position_Y_sub] == 0):
 				possibilities.append([position[0],position_Y_sub])
-				#pdb.set_trace()
 			elif (self.board[position[0]][position_Y_sub] != self.INVALID):
-				if((self.Y_MIN < position_Y_sub - 1) and self.verify_jump([position[0],position_Y_sub - 1])):
+				if(self.verify_jump([position[0],position_Y_sub - 1])):
 					possibilities.append([position[0],position_Y_sub - 1])
-					#pdb.set_trace()
 
 		# Segundo movimiento posible | derecha
 		if (position_Y_add < self.Y_MAX):
 			if (self.board[position[0]][position_Y_add] == 0):
 				possibilities.append([position[0],position_Y_add])
-				#pdb.set_trace()
-			elif ((self.Y_MAX > position_Y_add + 1) and self.board[position[0]][position_Y_add] != self.INVALID):
+			elif (self.board[position[0]][position_Y_add] != self.INVALID):
 				if(self.verify_jump([position[0],position_Y_add + 1])):
 					possibilities.append([position[0],position_Y_add + 1])
-					#pdb.set_trace()
 
 		# Si la fila es multiplo de 2
 		if (position[0] % 2 == 0):
@@ -313,42 +348,34 @@ class Game:
 				if (self.X_MIN < position_X_sub):
 					if (self.board[position_X_sub][position[1]] == 0):
 						possibilities.append([position_X_sub,position[1]])
-						#pdb.set_trace()
 					elif (self.board[position_X_sub][position[1]] != self.INVALID):
-						if((self.X_MIN < position_X_sub - 1) and self.verify_jump([position_X_sub - 1,position_Y_sub])):
+						if(self.verify_jump([position_X_sub - 1,position_Y_sub])):
 							possibilities.append([position_X_sub - 1,position_Y_sub])
-							#pdb.set_trace()
 
 				# Cuarto movimiento posible | derecha arriba
 				if (self.X_MIN < position_X_sub and position_Y_add < self.Y_MAX):
 					if (self.board[position_X_sub][position_Y_add] == 0):
 						possibilities.append([position_X_sub,position_Y_add])
-						#pdb.set_trace()
 					elif (self.board[position_X_sub][position_Y_add] != self.INVALID):
-						if((self.X_MIN < position_X_sub - 1) and self.verify_jump([position_X_sub - 1,position_Y_add])):
+						if(self.verify_jump([position_X_sub - 1,position_Y_add])):
 							possibilities.append([position_X_sub - 1,position_Y_add])
-							#pdb.set_trace()
 
 			if not (self.player_turn == self.PLAYER_TWO and position[0] < self.PLAYER_2_X_WIN):
 				# Quinto movimiento posible | izquierda abajo
 				if (position_X_add < self.X_MAX):
 					if (self.board[position_X_add][position[1]] == 0):
 						possibilities.append([position_X_add,position[1]])
-						#pdb.set_trace()
 					elif (self.board[position_X_add][position[1]] != self.INVALID):
-						if((self.X_MAX > position_X_add + 1) and self.verify_jump([position_X_add + 1,position_Y_sub])):
+						if(self.verify_jump([position_X_add + 1,position_Y_sub])):
 							possibilities.append([position_X_add + 1,position_Y_sub])
-							#pdb.set_trace()
 
 				# Sexto movimiento posible | derecha abajo
 				if (position_X_add < self.X_MAX and position_Y_add < self.Y_MAX):
 					if (self.board[position_X_add][position_Y_add] == 0):
 						possibilities.append([position_X_add,position_Y_add])
-						#pdb.set_trace()
 					elif (self.board[position_X_add][position_Y_add] != self.INVALID):
-						if((self.X_MAX > position_X_add + 1) and self.verify_jump([position_X_add + 1,position_Y_add])):
+						if(self.verify_jump([position_X_add + 1,position_Y_add])):
 							possibilities.append([position_X_add + 1,position_Y_add])
-							#pdb.set_trace()
 
 		# Si la fila no es multiplo de 2
 		else:
@@ -357,50 +384,42 @@ class Game:
 				if (self.X_MIN < position_X_sub and self.Y_MIN < position_Y_sub):
 					if (self.board[position_X_sub][position_Y_sub] == 0):
 						possibilities.append([position_X_sub,position_Y_sub])
-						#pdb.set_trace()
 					elif (self.board[position_X_sub][position_Y_sub] != self.INVALID):
-						if((self.X_MIN < position_X_sub -1) and self.verify_jump([position_X_sub - 1,position_Y_sub])):
+						if(self.verify_jump([position_X_sub - 1,position_Y_sub])):
 							possibilities.append([position_X_sub - 1,position_Y_sub])
-							#pdb.set_trace()
 
 				# Cuarto movimiento posible | derecha arriba
 				if (self.X_MIN < position_X_sub):
 					if (self.board[position_X_sub][position[1]] == 0):
 						possibilities.append([position_X_sub,position[1]])
-						#pdb.set_trace()
 					elif (self.board[position_X_sub][position[1]] != self.INVALID):
-						if((self.X_MIN < position_X_sub - 1) and self.verify_jump([position_X_sub - 1,position_Y_add])):
+						if(self.verify_jump([position_X_sub - 1,position_Y_add])):
 							possibilities.append([position_X_sub - 1,position_Y_add])
-							#pdb.set_trace()
 
 			if not (self.player_turn == self.PLAYER_TWO and position[0] < self.PLAYER_2_X_WIN):
 				# Quinto movimiento posible | izquierda abajo
 				if (position_X_add < self.X_MAX and self.Y_MIN < position_Y_sub):
 					if (self.board[position_X_add][position_Y_sub] == 0):
 						possibilities.append([position_X_add,position_Y_sub])
-						#pdb.set_trace()
 					elif (self.board[position_X_add][position_Y_sub] != self.INVALID):
-						if((self.X_MAX > position_X_add + 1) and self.verify_jump([position_X_add + 1,position_Y_sub])):
+						if(self.verify_jump([position_X_add + 1,position_Y_sub])):
 							possibilities.append([position_X_add + 1,position_Y_sub])
-							#pdb.set_trace()
 
 				# Sexto movimiento posible | derecha abajo
 				if (position_X_add < self.X_MAX):
 					if (self.board[position_X_add][position[1]] == 0):
 						possibilities.append([position_X_add,position[1]])
-						#pdb.set_trace()
 					elif (self.board[position_X_add][position[1]] != self.INVALID):
-						if((self.X_MAX > position_X_add +1) and self.verify_jump([position_X_add + 1,position_Y_add])):
+						if(self.verify_jump([position_X_add + 1,position_Y_add])):
 							possibilities.append([position_X_add + 1,position_Y_add])
-							#pdb.set_trace()
-		#pdb.set_trace()
+
 		return possibilities
 
 
 	def verify_jump(self, position):
-		return position[0] in range(self.X_MIN,self.X_MAX) and position[1] in range(self.Y_MIN,self.Y_MAX) and self.board[position[0]][position[1]] == self.EMPTY
+		return position[0] in range(self.REAL_MIN,self.X_MAX) and position[1] in range(self.REAL_MIN,self.Y_MAX) and self.board[position[0]][position[1]] == self.EMPTY
 
 
 if __name__== "__main__":
-	Test = Game(int(sys.argv[1]), int(sys.argv[2]))
+	Test = Game(int(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3]))
 	Test.start_game()
