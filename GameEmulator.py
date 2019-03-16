@@ -189,14 +189,41 @@ class Game:
 		self.player_turn = self.player_turn % 2 + 1
 
 
-	def move_randomly(self):
-		id_piece = random.randint(0, self.PIECES - 1)
-		possibilities = self.calculate_moves(self.players_pieces[self.player_turn][id_piece])
-		if possibilities:
-			new_pos = possibilities[random.randint(0, len(possibilities)- 1)]
-			self.execute_move(id_piece, new_pos)
+	def verify_stuck(self, player, position):
+		stuck = True
+		index = 0
+		if (player == self.PLAYER_ONE):
+			row = position[0] + 1
 		else:
-			self.move_randomly()
+			row = position[0] - 1
+
+		while (stuck and index < self.Y_MAX):
+			value = self.board[row][index]
+			if(value == self.EMPTY or value == player):
+				stuck = False
+			index += 1
+
+		return stuck
+
+
+	def move_randomly(self):
+		stuck = False
+		index = 0
+		while (not stuck and index < self.PIECES - 1):
+			if (self.PLAYER_1_X_WIN < self.players_pieces[self.PLAYER_TWO][index][0] and self.verify_stuck(self.PLAYER_TWO, self.players_pieces[self.PLAYER_TWO][index])):
+				stuck = True
+			index += 1
+
+		if (stuck):
+			self.GAME_OVER = True
+		else:
+			id_piece = random.randint(0, self.PIECES - 1)
+			possibilities = self.calculate_moves(self.players_pieces[self.player_turn][id_piece])
+			if possibilities:
+				new_pos = possibilities[random.randint(0, len(possibilities)- 1)]
+				self.execute_move(id_piece, new_pos)
+			else:
+				self.move_randomly()
 
 
 	def move_weighted(self):
@@ -226,13 +253,15 @@ class Game:
 		self.profit_reached = greatest_profit
 		
 		print(moves)
+
 		if (1 < len(moves)):
 			chosen = random.randint(0, len(moves) - 1)
 			self.execute_move(moves[chosen][0], moves[chosen][1])
 			print("PIECE: ", moves[chosen][0], " MOVE: ", moves[chosen][1])
-		else:
+		elif (1 == len(moves)):
 			self.execute_move(moves[0][0], moves[0][1])
-
+		else:
+			self.GAME_OVER = True
 
 
 	def print_board(self):

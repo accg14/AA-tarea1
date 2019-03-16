@@ -4,7 +4,7 @@ class Generalizer:
 		self.weights = self.load_initial_weights()
 		self.mu = 0.000000005
 		self.id_game = 1
-		self.print()
+		self.print_weights()
 
 	def load_initial_weights(self):
 		file = open('weights.txt', 'r')
@@ -164,7 +164,7 @@ class Generalizer:
 		self.persist_new_weights()
 
 
-	def print(self):
+	def print_weights(self):
 		print("Independent weight:\t", self.get_independent_weight())
 		print()
 		print("P1 | Start weight:\t", self.get_player1_start_weight())
