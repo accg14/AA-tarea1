@@ -231,41 +231,51 @@ class Game:
 
 
 	def move_weighted(self):
-		init = False
-		base = random.randint(0, self.PIECES - 1)
-		moves = []
+		stuck = False
+		index = 0
+		while (not stuck and index < self.PIECES):
+			if (self.players_pieces[self.PLAYER_ONE][index][0] < self.PLAYER_2_X_WIN and self.verify_stuck(self.PLAYER_ONE, self.players_pieces[self.PLAYER_ONE][index])):
+				stuck = True
+			index += 1
 
-		for i in range(0, self.PIECES):
-			selected_piece = (base + i) % self.PIECES
-			possibilities = self.calculate_moves(self.players_pieces[self.PLAYER_ONE][selected_piece])
-			for possible_move in possibilities:
-				current_profit = self.simulate_state(selected_piece, possible_move)
-				if (not init):
-					init = True
-					greatest_profit = current_profit
-					moves.append([selected_piece, possible_move])
-
-				elif (current_profit > greatest_profit):
-					greatest_profit = current_profit
-					moves = [[selected_piece, possible_move]]
-
-				elif (current_profit == greatest_profit):
-					moves.append([selected_piece, possible_move])
-
-		self.print_board()
-
-		self.profit_reached = greatest_profit
-		
-		print(moves)
-
-		if (1 < len(moves)):
-			chosen = random.randint(0, len(moves) - 1)
-			self.execute_move(moves[chosen][0], moves[chosen][1])
-			print("PIECE: ", moves[chosen][0], " MOVE: ", moves[chosen][1])
-		elif (1 == len(moves)):
-			self.execute_move(moves[0][0], moves[0][1])
-		else:
+		if (stuck):
 			self.GAME_OVER = True
+		else:
+			init = False
+			base = random.randint(0, self.PIECES - 1)
+			moves = []
+
+			for i in range(0, self.PIECES):
+				selected_piece = (base + i) % self.PIECES
+				possibilities = self.calculate_moves(self.players_pieces[self.PLAYER_ONE][selected_piece])
+				for possible_move in possibilities:
+					current_profit = self.simulate_state(selected_piece, possible_move)
+					if (not init):
+						init = True
+						greatest_profit = current_profit
+						moves.append([selected_piece, possible_move])
+
+					elif (current_profit > greatest_profit):
+						greatest_profit = current_profit
+						moves = [[selected_piece, possible_move]]
+
+					elif (current_profit == greatest_profit):
+						moves.append([selected_piece, possible_move])
+
+			self.print_board()
+
+			self.profit_reached = greatest_profit
+			
+			print(moves)
+
+			if (1 < len(moves)):
+				chosen = random.randint(0, len(moves) - 1)
+				self.execute_move(moves[chosen][0], moves[chosen][1])
+				print("PIECE: ", moves[chosen][0], " MOVE: ", moves[chosen][1])
+			elif (1 == len(moves)):
+				self.execute_move(moves[0][0], moves[0][1])
+			else:
+				self.GAME_OVER = True
 
 
 	def print_board(self):
