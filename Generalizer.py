@@ -1,10 +1,11 @@
 import os, datetime, numpy, pdb
+
 class Generalizer:
 	def __init__(self):
 		self.weights = self.load_initial_weights()
-		self.mu = 0.000000005
-		self.id_game = 1
+		self.mu = 0.05
 		self.print_weights()
+
 
 	def load_initial_weights(self):
 		file = open('weights.txt', 'r')
@@ -15,6 +16,10 @@ class Generalizer:
 		print(last)
 		values = last.split('|')
 		return (list(map(lambda x: float(x), values)))
+
+
+	def get_weights_for_win(self):
+		return self.weights
 
 	def get_independent_weight(self):
 		return self.weights[0]
@@ -83,12 +88,14 @@ class Generalizer:
 	def set_player2_start_weight(self, value):
 		self.weights[10] = value
 
+
 	def persist_new_weights(self):
 		file = open('weights.txt', 'a')
 		weights_str = list(map(lambda x: str(x), self.weights))
 		line = '|'.join(weights_str) + '\n'
 		file.write(line)
 		file.close()
+
 
 	def persist_metrics(_, games):
 		file = open('metric_results.txt', 'a')

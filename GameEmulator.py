@@ -35,8 +35,9 @@ class Game:
 
 	def create_board_line(self, start, end, value):
 		row = []
+		end += 1
 		for i in range(self.Y_MAX):
-			if i in range(start, end + 1):
+			if i in range(start, end):
 				row.append(value)
 			else:
 				row.append(self.INVALID)
@@ -66,7 +67,7 @@ class Game:
 
 
 	def initialize_pieces_position(self):
-		self.profit_reached = 0
+		self.profit_reached = self.EMPTY
 		self.player1_end_pieces = self.EMPTY
 		self.player2_end_pieces = self.EMPTY
 		self.player1_near_pieces = self.EMPTY
@@ -111,7 +112,7 @@ class Game:
 					self.game_over()
 
 					if (not self.GAME_OVER):
-						self.move_weighted_outdated()
+						self.move_weighted()
 						self.move_identifier += 1
 						self.game_over()
 			else:
@@ -189,17 +190,17 @@ class Game:
 		self.player_turn = self.player_turn % 2 + 1
 
 
-	def verify_stuck(self, player, position):
+	def verify_stuck(self, position):
 		stuck = True
 		index = 0
-		if (player == self.PLAYER_ONE):
+		if (self.player_turn == self.PLAYER_ONE):
 			row = position[0] + 1
 		else:
 			row = position[0] - 1
 
 		while (stuck and index < self.Y_MAX):
 			value = self.board[row][index]
-			if(value == self.EMPTY or value == player):
+			if(value == self.EMPTY or value == self.player_turn):
 				stuck = False
 			index += 1
 
@@ -210,7 +211,7 @@ class Game:
 		stuck = False
 		index = 0
 		while (not stuck and index < self.PIECES):
-			if (self.PLAYER_1_X_WIN < self.players_pieces[self.PLAYER_TWO][index][0] and self.verify_stuck(self.PLAYER_TWO, self.players_pieces[self.PLAYER_TWO][index])):
+			if (self.PLAYER_1_X_WIN < self.players_pieces[self.PLAYER_TWO][index][0] and self.verify_stuck(self.players_pieces[self.PLAYER_TWO][index])):
 				stuck = True
 			index += 1
 
@@ -226,17 +227,20 @@ class Game:
 				self.move_randomly()
 
 
-	def move_weighted_outdated():
-		print('hola')
-
-
 	def move_weighted(self):
 		stuck = False
 		index = 0
-		while (not stuck and index < self.PIECES):
-			if (self.players_pieces[self.PLAYER_ONE][index][0] < self.PLAYER_2_X_WIN and self.verify_stuck(self.PLAYER_ONE, self.players_pieces[self.PLAYER_ONE][index])):
-				stuck = True
-			index += 1
+
+		if (self.player_turn == self.PLAYER_ONE):
+			while (not stuck and index < self.PIECES):
+				if (self.players_pieces[self.PLAYER_ONE][index][0] < self.PLAYER_2_X_WIN and self.verify_stuck(self.players_pieces[self.PLAYER_ONE][index])):
+					stuck = True
+				index += 1
+		else:
+			while (not stuck and index < self.PIECES):
+				if (self.PLAYER_1_X_WIN < self.players_pieces[self.PLAYER_TWO][index][0] and self.verify_stuck(self.players_pieces[self.PLAYER_TWO][index])):
+					stuck = True
+				index += 1
 
 		if (stuck):
 			self.GAME_OVER = True
@@ -247,7 +251,7 @@ class Game:
 
 			for i in range(0, self.PIECES):
 				selected_piece = (base + i) % self.PIECES
-				possibilities = self.calculate_moves(self.players_pieces[self.PLAYER_ONE][selected_piece])
+				possibilities = self.calculate_moves(self.players_pieces[self.player_turn][selected_piece])
 				for possible_move in possibilities:
 					current_profit = self.simulate_state(selected_piece, possible_move)
 					if (not init):
@@ -263,10 +267,7 @@ class Game:
 						moves.append([selected_piece, possible_move])
 
 			self.print_board()
-
 			self.profit_reached = greatest_profit
-			
-			print(moves)
 
 			if (1 < len(moves)):
 				chosen = random.randint(0, len(moves) - 1)
@@ -302,24 +303,44 @@ class Game:
 		# Simulates 'fake' movement
 		self.update_var(old_pos, move_to_test)
 
-		if (self.player1_end_pieces == self.PIECES):
-			player_one_weight = 1
-			player_two_weight = 0
-		elif (self.player2_end_pieces == self.PIECES):
-			player_one_weight = 0
-			player_two_weight = -1
+		if ((self.player_turn == self.PLAYER_ONE and self.player1_end_pieces == self.PIECES) or (self.player_turn == self.PLAYER_TWO and self.player2_end_pieces == self.PIECES)):
+			player = 1
+			opponent = 0
 		else:
-			player_one_weight = self.player1_end_pieces*self.generalizer.get_player1_end_weight() + self.player1_near_pieces*self.generalizer.get_player1_near_weight() + self.player1_middle_pieces*self.generalizer.get_player1_middle_weight() + self.player1_far_pieces*self.generalizer.get_player1_far_weight() + self.player1_start_pieces*self.generalizer.get_player1_start_weight()
-			
-			player_two_weight = self.player2_end_pieces*self.generalizer.get_player2_end_weight() + self.player2_near_pieces*self.generalizer.get_player2_near_weight() + self.player2_middle_pieces*self.generalizer.get_player2_middle_weight() + self.player2_far_pieces*self.generalizer.get_player2_far_weight() + self.player2_start_pieces*self.generalizer.get_player2_start_weight()
+			weights = self.generalizer.get_weights_for_win()
+
+			if (self.player_turn == self.PLAYER_ONE):
+				player  = self.player1_end_pieces*weights[1]
+				player += self.player1_near_pieces*weights[3]
+				player += self.player1_middle_pieces*weights[5]
+				player += self.player1_far_pieces*weights[7]
+				player += self.player1_start_pieces*weights[9]
+
+				opponent  = self.player2_end_pieces*weights[2]
+				opponent += self.player2_near_pieces*weights[4]
+				opponent += self.player2_middle_pieces*weights[6]
+				opponent += self.player2_far_pieces*weights[8]
+				opponent += self.player2_start_pieces*weights[10]
+			else:
+				player  = self.player2_end_pieces*weights[1]
+				player += self.player2_near_pieces*weights[3]
+				player += self.player2_middle_pieces*weights[5]
+				player += self.player2_far_pieces*weights[7]
+				player += self.player2_start_pieces*weights[9]
+
+				opponent  = self.player1_end_pieces*weights[2]
+				opponent += self.player1_near_pieces*weights[4]
+				opponent += self.player1_middle_pieces*weights[6]
+				opponent += self.player1_far_pieces*weights[8]
+				opponent += self.player1_start_pieces*weights[10]
 
 		# Undo 'fake' movement
 		self.update_var(move_to_test, old_pos)
 
-		if(player_one_weight == 1 or player_two_weight == -1):
-			return (player_one_weight + player_two_weight)
+		if(player == 1):
+			return (player)
 		else:
-			return (player_one_weight + player_two_weight + self.generalizer.get_independent_weight())
+			return (player + opponent + weights[0])
 
 	def game_over(self):
 		if(self.player1_end_pieces == self.PIECES or self.player2_end_pieces == self.PIECES or self.LIMIT_MOVE < self.move_identifier):
