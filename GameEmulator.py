@@ -19,7 +19,7 @@ class Game:
 	PLAYER_1_X_WIN = 12
 	PLAYER_2_X_WIN = 4
 
-	LIMIT_MOVE = 200000
+	LIMIT_MOVE = 5
 
 	FILE_NAME = "result"
 	FILE_EXTENSION = ".txt"
@@ -289,7 +289,7 @@ class Game:
 				printable += "["
 			for y in range(self.REAL_MIN, self.Y_MAX):
 				if(self.board[x][y] == self.INVALID):
-					printable += "9,"
+					printable += "X,"
 				else:
 					printable += str(self.board[x][y])
 					printable += ","
@@ -300,16 +300,17 @@ class Game:
 	def simulate_state(self, id_piece, move_to_test):
 		old_pos = self.players_pieces[self.player_turn][id_piece]
 
-		# Simulates 'fake' movement
+		# Simulates fake movement
 		self.update_var(old_pos, move_to_test)
 
 		if ((self.player_turn == self.PLAYER_ONE and self.player1_end_pieces == self.PIECES) or (self.player_turn == self.PLAYER_TWO and self.player2_end_pieces == self.PIECES)):
 			player = 1
 			opponent = 0
 		else:
-			weights = self.generalizer.get_weights_for_win()
 
 			if (self.player_turn == self.PLAYER_ONE):
+				weights = self.generalizer.get_weights_for_player1()
+
 				player  = self.player1_end_pieces*weights[1]
 				player += self.player1_near_pieces*weights[3]
 				player += self.player1_middle_pieces*weights[5]
@@ -322,6 +323,8 @@ class Game:
 				opponent += self.player2_far_pieces*weights[8]
 				opponent += self.player2_start_pieces*weights[10]
 			else:
+				weights = self.generalizer.get_weights_for_player2()
+
 				player  = self.player2_end_pieces*weights[1]
 				player += self.player2_near_pieces*weights[3]
 				player += self.player2_middle_pieces*weights[5]
@@ -334,13 +337,14 @@ class Game:
 				opponent += self.player1_far_pieces*weights[8]
 				opponent += self.player1_start_pieces*weights[10]
 
-		# Undo 'fake' movement
+		# Undo fake movement
 		self.update_var(move_to_test, old_pos)
 
 		if(player == 1):
 			return (player)
 		else:
 			return (player + opponent + weights[0])
+
 
 	def game_over(self):
 		if(self.player1_end_pieces == self.PIECES or self.player2_end_pieces == self.PIECES or self.LIMIT_MOVE < self.move_identifier):
@@ -352,6 +356,7 @@ class Game:
 			else:
 				self.adjust_array.append([-1,self.file_name])
 
+		if (self.GAME_OVER):
 			if not (self.game_identifier % self.UPDATE_FREQUENCY):
 				self.generalizer.adjust_weights(self.adjust_array)
 				self.adjust_array = []

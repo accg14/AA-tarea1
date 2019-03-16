@@ -2,7 +2,7 @@ import os, datetime, numpy, pdb
 
 class Generalizer:
 	def __init__(self):
-		self.weights = self.load_initial_weights()
+		self.load_initial_weights()
 		self.mu = 0.05
 		self.print_weights()
 
@@ -13,13 +13,20 @@ class Generalizer:
 		file.close()
 
 		last = all_lines[-1]
-		print(last)
 		values = last.split('|')
-		return (list(map(lambda x: float(x), values)))
+		self.weights = (list(map(lambda x: float(x), values)))
+
+		last = all_lines[-2]
+		values = last.split('|')
+		self.old_weights = (list(map(lambda x: float(x), values)))
 
 
-	def get_weights_for_win(self):
+	def get_weights_for_player1(self):
 		return self.weights
+
+	def get_weights_for_player2(self):
+		return self.old_weights
+
 
 	def get_independent_weight(self):
 		return self.weights[0]
