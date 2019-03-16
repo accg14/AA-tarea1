@@ -226,6 +226,10 @@ class Game:
 				self.move_randomly()
 
 
+	def move_weighted_outdated():
+		print('hola')
+
+
 	def move_weighted(self):
 		init = False
 		base = random.randint(0, self.PIECES - 1)
@@ -280,9 +284,6 @@ class Game:
 					printable += ","
 			printable += "]\n"
 		print(printable)
-
-	def move_weighted_outdated():
-		print('hola')
 
 
 	def simulate_state(self, id_piece, move_to_test):
