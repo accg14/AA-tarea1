@@ -209,7 +209,7 @@ class Game:
 	def move_randomly(self):
 		stuck = False
 		index = 0
-		while (not stuck and index < self.PIECES - 1):
+		while (not stuck and index < self.PIECES):
 			if (self.PLAYER_1_X_WIN < self.players_pieces[self.PLAYER_TWO][index][0] and self.verify_stuck(self.PLAYER_TWO, self.players_pieces[self.PLAYER_TWO][index])):
 				stuck = True
 			index += 1
