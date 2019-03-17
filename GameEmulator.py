@@ -8,6 +8,7 @@ class Game:
 	EMPTY = 0
 	INVALID = -1
 	PIECES = 10
+	MID_PIECES = PIECES / 2 - 1
 
 	X_MAX = 17
 	X_MIN = -1
@@ -67,7 +68,8 @@ class Game:
 
 
 	def initialize_pieces_position(self):
-		self.profit_reached = self.EMPTY
+		self.old_profit_reached = self.EMPTY
+		self.new_profit_reached = self.EMPTY
 		self.player1_end_pieces = self.EMPTY
 		self.player2_end_pieces = self.EMPTY
 		self.player1_near_pieces = self.EMPTY
@@ -267,15 +269,15 @@ class Game:
 						moves.append([selected_piece, possible_move])
 
 			self.print_board()
-			self.profit_reached = greatest_profit
+
+			self.old_profit_reached = self.calculate_board_value()
+			self.new_profit_reached = greatest_profit
 
 			if (1 < len(moves)):
 				chosen = random.randint(0, len(moves) - 1)
 				self.execute_move(moves[chosen][0], moves[chosen][1])
-				print("PIECE: ", moves[chosen][0], " MOVE: ", moves[chosen][1], "greatest_profit: ", greatest_profit)
 			elif (1 == len(moves)):
 				self.execute_move(moves[0][0], moves[0][1])
-				print("PIECE: ", moves[0][0], " MOVE: ", moves[0][1], "greatest_profit: ", greatest_profit)
 			else:
 				self.GAME_OVER = True
 
@@ -297,15 +299,9 @@ class Game:
 		print(printable)
 
 
-	def simulate_state(self, id_piece, move_to_test):
-		old_pos = self.players_pieces[self.player_turn][id_piece]
-
-		# Simulates fake movement
-		self.update_var(old_pos, move_to_test)
-
+	def calculate_board_value(self):
 		if ((self.player_turn == self.PLAYER_ONE and self.player1_end_pieces == self.PIECES) or (self.player_turn == self.PLAYER_TWO and self.player2_end_pieces == self.PIECES)):
-			player = 1
-			opponent = 0
+			return 1
 		else:
 
 			if (self.player_turn == self.PLAYER_ONE):
@@ -336,16 +332,21 @@ class Game:
 				opponent += self.player1_middle_pieces*weights[6]
 				opponent += self.player1_far_pieces*weights[8]
 				opponent += self.player1_start_pieces*weights[10]
+			return (player + opponent + weights[0])
+
+
+	def simulate_state(self, id_piece, move_to_test):
+		old_pos = self.players_pieces[self.player_turn][id_piece]
+
+		# Simulates fake movement
+		self.update_var(old_pos, move_to_test)
+
+		value = self.calculate_board_value()
 
 		# Undo fake movement
 		self.update_var(move_to_test, old_pos)
 
-		if(player == 1):
-			return (player)
-		elif(self.player_turn == self.PLAYER_ONE):
-			return (player + opponent + weights[0])
-		elif(self.player_turn == self.PLAYER_TWO):
-			return (player + opponent - weights[0])
+		return value
 
 
 	def game_over(self):
@@ -353,7 +354,7 @@ class Game:
 			self.GAME_OVER = True
 			self.save_state()
 
-			if (self.player1_end_pieces == self.PIECES):
+			if (self.player1_end_pieces == self.PIECES or (self.MID_PIECES < self.player1_end_pieces and self.player2_end_pieces < self.player1_end_pieces)):
 				self.adjust_array.append([1,self.file_name])
 			else:
 				self.adjust_array.append([-1,self.file_name])
@@ -369,7 +370,8 @@ class Game:
 
 		file = open(self.file_name, "a")
 
-		line = str(self.profit_reached) + split
+		line = str(self.old_profit_reached) + split
+		line += str(self.new_profit_reached) + split
 		line += str(self.player1_end_pieces) + split
 		line += str(self.player2_end_pieces) + split
 		line += str(self.player1_near_pieces) + split

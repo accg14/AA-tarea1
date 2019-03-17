@@ -135,11 +135,11 @@ class Generalizer:
 
 		final_error = sum_error / sample_size
 		if (final_error < 0,3):
-			return 0.3
+			return 0.03
 		elif (final_error < 0,6):
-			return 0.6
+			return 0.06
 		else:
-			return 0.9
+			return 0.09
 
 
 	def adjust_weights(self,result):
@@ -163,15 +163,16 @@ class Generalizer:
 				values = line.split('|')
 				values[len(values)-1].replace('\n','')
 				b = list(map(lambda x: float(x), values))
-				for i in range(0, len(self.weights)):
+				
+				self.weights[0] = self.weights[0] + self.mu*(b[1] - b[0]) #w0
+				
+				for i in range(2, len(self.weights)):
 					# w(i) <- w(i) + mu(V_train_(b) - V_aprox_(b))x(i)
-					if i > 0: 
-						self.weights[i] = self.weights[i] + self.mu*(r[0] - b[0])*b[i]
-					else:
-						self.weights[i] = self.weights[i] + self.mu*(r[0] - b[0]) #w0
+					self.weights[i] = self.weights[i] + self.mu*(b[1] - b[0])*b[i]
+
 			norm = 0
 			for w in self.weights:
-				norm += numpy.power(w,2)
+				norm += numpy.power(w, 2)
 			norm = numpy.sqrt(norm)
 
 			for i in range(len(self.weights)):
