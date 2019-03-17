@@ -101,9 +101,7 @@ class Game:
 			self.players_pieces = self.initialize_players_pieces()
 
 			self.GAME_OVER = False
-
 			self.player_turn = self.PLAYER_ONE
-
 			self.move_identifier = 0
 
 			if (self.GAME_TYPE):
@@ -111,23 +109,23 @@ class Game:
 					self.move_weighted()
 					self.move_identifier += 1
 					self.save_state()
-					self.game_over()
+					self.verify_game_over()
 
 					if (not self.GAME_OVER):
 						self.move_weighted()
 						self.move_identifier += 1
-						self.game_over()
+						self.verify_game_over()
 			else:
 				while not self.GAME_OVER:
 					self.move_weighted()
 					self.move_identifier += 1
 					self.save_state()
-					self.game_over()
+					self.verify_game_over()
 
 					if (not self.GAME_OVER):
 						self.move_randomly()
 						self.move_identifier += 1
-						self.game_over()
+						self.verify_game_over()
 
 			self.game_identifier += 1
 
@@ -219,6 +217,8 @@ class Game:
 
 		if (stuck):
 			self.GAME_OVER = True
+			print("----------")
+			print("NO WINNER: ")
 		else:
 			id_piece = random.randint(0, self.PIECES - 1)
 			possibilities = self.calculate_moves(self.players_pieces[self.player_turn][id_piece])
@@ -246,6 +246,8 @@ class Game:
 
 		if (stuck):
 			self.GAME_OVER = True
+			print("----------")
+			print("NO WINNER: ")
 		else:
 			init = False
 			base = random.randint(0, self.PIECES - 1)
@@ -268,10 +270,9 @@ class Game:
 					elif (current_profit == greatest_profit):
 						moves.append([selected_piece, possible_move])
 
-			self.print_board()
-
-			self.old_profit_reached = self.calculate_board_value()
-			self.new_profit_reached = greatest_profit
+			if (self.player_turn == self.PLAYER_ONE):
+				self.old_profit_reached = self.calculate_board_value()
+				self.new_profit_reached = greatest_profit
 
 			if (1 < len(moves)):
 				chosen = random.randint(0, len(moves) - 1)
@@ -349,17 +350,22 @@ class Game:
 		return value
 
 
-	def game_over(self):
+	def verify_game_over(self):
 		if(self.player1_end_pieces == self.PIECES or self.player2_end_pieces == self.PIECES or self.LIMIT_MOVE < self.move_identifier):
 			self.GAME_OVER = True
-			self.save_state()
 
+			print("----------")
 			if (self.player1_end_pieces == self.PIECES or (self.MID_PIECES < self.player1_end_pieces and self.player2_end_pieces < self.player1_end_pieces)):
 				self.adjust_array.append([1,self.file_name])
-			else:
+				print("PLAYER 1 WINS: ")
+			elif (self.player2_end_pieces == self.PIECES):
+				self.save_special_state(self.old_profit_reached, -1)
 				self.adjust_array.append([-1,self.file_name])
+				print("PLAYER 2 WINS: ")
 
 		if (self.GAME_OVER):
+			self.print_board()
+			print("----------")
 			if not (self.game_identifier % self.UPDATE_FREQUENCY):
 				self.generalizer.adjust_weights(self.adjust_array)
 				self.adjust_array = []
@@ -372,6 +378,28 @@ class Game:
 
 		line = str(self.old_profit_reached) + split
 		line += str(self.new_profit_reached) + split
+		line += str(self.player1_end_pieces) + split
+		line += str(self.player2_end_pieces) + split
+		line += str(self.player1_near_pieces) + split
+		line += str(self.player2_near_pieces) + split
+		line += str(self.player1_middle_pieces) + split
+		line += str(self.player2_middle_pieces) + split
+		line += str(self.player1_far_pieces) + split
+		line += str(self.player2_far_pieces) + split
+		line += str(self.player1_start_pieces) + split
+		line += str(self.player2_start_pieces) + "\n"
+
+		file.write(line)
+		file.close()
+
+
+	def save_special_state(self, old_profit_reached, new_profit_reached):
+		split = "|"
+
+		file = open(self.file_name, "a")
+
+		line = str(old_profit_reached) + split
+		line += str(new_profit_reached) + split
 		line += str(self.player1_end_pieces) + split
 		line += str(self.player2_end_pieces) + split
 		line += str(self.player1_near_pieces) + split

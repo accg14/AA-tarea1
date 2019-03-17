@@ -3,7 +3,7 @@ import os, datetime, numpy, pdb
 class Generalizer:
 	def __init__(self):
 		self.load_initial_weights()
-		self.mu = 0.1
+		self.mu = 2
 		self.print_weights()
 
 
@@ -112,63 +112,37 @@ class Generalizer:
 		file.close()		
 
 
-	def adjust_mu(self,result,filename):
-		file = open(filename, 'r')
-		sum_error = 0
-		sample_size = 0
-		for line in file:
-			sample_size += 1
-			values = line.split('|')
-			values[len(values)-1].replace('\n','')
-			
-			tuple = list(map(lambda x: float(x), values)) # all values
-			difference = numpy.power(result-tuple[0],2)
-			
-			i = 1
-			norm = 0
-			for i in range(len(tuple)):
-				norm += numpy.power(tuple[i],2)
-			norm = numpy.sqrt(norm)
-
-			sum_error += difference #/ norm
-		file.close()
-
-		final_error = sum_error / sample_size
-		if (final_error < 0,3):
-			return 0.03
-		elif (final_error < 0,6):
-			return 0.06
-		else:
-			return 0.09
-
-
-	def adjust_weights(self,result):
+	def adjust_weights(self, results):
 		self.old_weights = list(map(lambda x : x, self.weights))
 
-		mu_values = []
-		for r in result:
-			mu_values.append(self.adjust_mu(r[0],r[1]))
+		win_lose_games = [0, 0]
+		for result in results:
+			game_result = result[0]
+			file_name = result[1]
 
-		if (mu_values):
-			self.mu = sum(mu_values)/len(mu_values)
-
-		games = [0, 0]
-		for r in result:
-			file = open(r[1], 'r')
-			if (int(r[0]) == 1):
-				games[0] += 1
+			if(game_result == 1):
+				mu = 0.0000000001
+				print('GANO')
 			else:
-				games[1] += 1
+				mu = 0.00001
+				print('PIERDO')
+
+			file = open(file_name, 'r')
+
+			if (int(game_result) == 1):
+				win_lose_games[0] += 1
+			else:
+				win_lose_games[1] += 1
+
 			for line in file:
 				values = line.split('|')
-				values[len(values)-1].replace('\n','')
+				values[len(values) - 1].replace('\n','')
 				b = list(map(lambda x: float(x), values))
-				
-				self.weights[0] = self.weights[0] + self.mu*(b[1] - b[0]) #w0
-				
+				self.weights[0] = self.weights[0] + mu*(b[1] - b[0]) #w0
+
 				for i in range(2, len(self.weights)):
 					# w(i) <- w(i) + mu(V_train_(b) - V_aprox_(b))x(i)
-					self.weights[i] = self.weights[i] + self.mu*(b[1] - b[0])*b[i]
+					self.weights[i] = self.weights[i] + mu*(b[1] - b[0])*b[i]
 
 			norm = 0
 			for w in self.weights:
@@ -179,7 +153,7 @@ class Generalizer:
 				self.weights[i] /= norm
 
 			file.close()
-		self.persist_metrics(games)
+		self.persist_metrics(win_lose_games)
 		self.persist_new_weights()
 
 
