@@ -19,7 +19,7 @@ class Game:
 	PLAYER_1_X_WIN = 12
 	PLAYER_2_X_WIN = 4
 
-	LIMIT_MOVE = 200000
+	LIMIT_MOVE = 10000
 
 	FILE_NAME = "result"
 	FILE_EXTENSION = ".txt"
@@ -342,8 +342,10 @@ class Game:
 
 		if(player == 1):
 			return (player)
-		else:
+		elif(self.player_turn == self.PLAYER_ONE):
 			return (player + opponent + weights[0])
+		elif(self.player_turn == self.PLAYER_TWO):
+			return (player + opponent - weights[0])
 
 
 	def game_over(self):

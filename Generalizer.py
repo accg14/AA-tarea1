@@ -3,7 +3,7 @@ import os, datetime, numpy, pdb
 class Generalizer:
 	def __init__(self):
 		self.load_initial_weights()
-		self.mu = 0.05
+		self.mu = 0.1
 		self.print_weights()
 
 
@@ -130,19 +130,21 @@ class Generalizer:
 				norm += numpy.power(tuple[i],2)
 			norm = numpy.sqrt(norm)
 
-			sum_error += difference / norm
+			sum_error += difference #/ norm
 		file.close()
 
 		final_error = sum_error / sample_size
 		if (final_error < 0,3):
-			return 0.003
+			return 0.3
 		elif (final_error < 0,6):
-			return 0.006
+			return 0.6
 		else:
-			return 0.009
+			return 0.9
 
 
 	def adjust_weights(self,result):
+		self.old_weights = list(map(lambda x : x, self.weights))
+
 		mu_values = []
 		for r in result:
 			mu_values.append(self.adjust_mu(r[0],r[1]))
