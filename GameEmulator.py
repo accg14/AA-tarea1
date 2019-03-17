@@ -20,7 +20,7 @@ class Game:
 	PLAYER_1_X_WIN = 12
 	PLAYER_2_X_WIN = 4
 
-	LIMIT_MOVE = 10000
+	LIMIT_MOVE = 35000
 
 	FILE_NAME = "result"
 	FILE_EXTENSION = ".txt"
