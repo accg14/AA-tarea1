@@ -308,31 +308,21 @@ class Game:
 				weights = self.generalizer.get_weights_for_player1()
 
 				player  = self.player1_end_pieces*weights[1]
-				player += self.player1_near_pieces*weights[3]
-				player += self.player1_middle_pieces*weights[5]
-				player += self.player1_far_pieces*weights[7]
-				player += self.player1_start_pieces*weights[9]
+				player += self.player1_near_pieces*weights[2]
+				player += self.player1_middle_pieces*weights[3]
+				player += self.player1_far_pieces*weights[4]
+				player += self.player1_start_pieces*weights[5]
 
-				opponent  = self.player2_end_pieces*weights[2]
-				opponent += self.player2_near_pieces*weights[4]
-				opponent += self.player2_middle_pieces*weights[6]
-				opponent += self.player2_far_pieces*weights[8]
-				opponent += self.player2_start_pieces*weights[10]
 			else:
 				weights = self.generalizer.get_weights_for_player2()
 
 				player  = self.player2_end_pieces*weights[1]
-				player += self.player2_near_pieces*weights[3]
-				player += self.player2_middle_pieces*weights[5]
-				player += self.player2_far_pieces*weights[7]
-				player += self.player2_start_pieces*weights[9]
+				player += self.player2_near_pieces*weights[2]
+				player += self.player2_middle_pieces*weights[3]
+				player += self.player2_far_pieces*weights[4]
+				player += self.player2_start_pieces*weights[5]
 
-				opponent  = self.player1_end_pieces*weights[2]
-				opponent += self.player1_near_pieces*weights[4]
-				opponent += self.player1_middle_pieces*weights[6]
-				opponent += self.player1_far_pieces*weights[8]
-				opponent += self.player1_start_pieces*weights[10]
-			return (player + opponent + weights[0])
+			return (player + weights[0])
 
 
 	def simulate_state(self, id_piece, move_to_test):
@@ -373,15 +363,15 @@ class Game:
 		line = str(self.old_profit_reached) + split
 		line += str(self.new_profit_reached) + split
 		line += str(self.player1_end_pieces) + split
-		line += str(self.player2_end_pieces) + split
+		#line += str(self.player2_end_pieces) + split
 		line += str(self.player1_near_pieces) + split
-		line += str(self.player2_near_pieces) + split
+		#line += str(self.player2_near_pieces) + split
 		line += str(self.player1_middle_pieces) + split
-		line += str(self.player2_middle_pieces) + split
+		#line += str(self.player2_middle_pieces) + split
 		line += str(self.player1_far_pieces) + split
-		line += str(self.player2_far_pieces) + split
-		line += str(self.player1_start_pieces) + split
-		line += str(self.player2_start_pieces) + "\n"
+		#line += str(self.player2_far_pieces) + split
+		line += str(self.player1_start_pieces) + "\n"#+ split
+		#line += str(self.player2_start_pieces) + "\n"
 
 		file.write(line)
 		file.close()
