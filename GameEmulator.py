@@ -19,7 +19,7 @@ class Game:
 	PLAYER_1_X_WIN = 12
 	PLAYER_2_X_WIN = 4
 
-	LIMIT_MOVE = 5
+	LIMIT_MOVE = 200000
 
 	FILE_NAME = "result"
 	FILE_EXTENSION = ".txt"
@@ -272,9 +272,10 @@ class Game:
 			if (1 < len(moves)):
 				chosen = random.randint(0, len(moves) - 1)
 				self.execute_move(moves[chosen][0], moves[chosen][1])
-				print("PIECE: ", moves[chosen][0], " MOVE: ", moves[chosen][1])
+				print("PIECE: ", moves[chosen][0], " MOVE: ", moves[chosen][1], "greatest_profit: ", greatest_profit)
 			elif (1 == len(moves)):
 				self.execute_move(moves[0][0], moves[0][1])
+				print("PIECE: ", moves[0][0], " MOVE: ", moves[0][1], "greatest_profit: ", greatest_profit)
 			else:
 				self.GAME_OVER = True
 
