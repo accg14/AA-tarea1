@@ -104,6 +104,9 @@ class Game:
 			self.player_turn = self.PLAYER_ONE
 			self.move_identifier = 0
 
+			print("------------------------------")
+			print("GAME: ", self.game_identifier)
+
 			if (self.GAME_TYPE):
 				while not self.GAME_OVER:
 					self.move_weighted()
@@ -217,7 +220,6 @@ class Game:
 
 		if (stuck):
 			self.GAME_OVER = True
-			print("----------")
 			print("NO WINNER: ")
 		else:
 			id_piece = random.randint(0, self.PIECES - 1)
@@ -246,7 +248,6 @@ class Game:
 
 		if (stuck):
 			self.GAME_OVER = True
-			print("----------")
 			print("NO WINNER: ")
 		else:
 			init = False
@@ -354,7 +355,6 @@ class Game:
 		if(self.player1_end_pieces == self.PIECES or self.player2_end_pieces == self.PIECES or self.LIMIT_MOVE < self.move_identifier):
 			self.GAME_OVER = True
 
-			print("----------")
 			if (self.player1_end_pieces == self.PIECES or (self.MID_PIECES < self.player1_end_pieces and self.player2_end_pieces < self.player1_end_pieces)):
 				self.adjust_array.append([1,self.file_name])
 				print("PLAYER 1 WINS: ")
@@ -365,7 +365,6 @@ class Game:
 
 		if (self.GAME_OVER):
 			self.print_board()
-			print("----------")
 			if not (self.game_identifier % self.UPDATE_FREQUENCY):
 				self.generalizer.adjust_weights(self.adjust_array)
 				self.adjust_array = []

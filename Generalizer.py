@@ -121,11 +121,9 @@ class Generalizer:
 			file_name = result[1]
 
 			if(game_result == 1):
-				mu = 0.0000000001
-				print('GANO')
+				mu = 0.0000001
 			else:
-				mu = 0.00001
-				print('PIERDO')
+				mu = 0.0001
 
 			file = open(file_name, 'r')
 
