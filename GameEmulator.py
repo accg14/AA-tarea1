@@ -281,20 +281,19 @@ class Game:
 
 
 	def print_board(self):
-		print("----------")
 		printable = ""
 		for x in range(self.REAL_MIN, self.X_MAX):
 			if(x % 2 == 0):
-				printable += " ["
+				printable += " "
 			else:
-				printable += "["
+				printable += ""
 			for y in range(self.REAL_MIN, self.Y_MAX):
 				if(self.board[x][y] == self.INVALID):
-					printable += "X,"
+					printable += "  "
 				else:
 					printable += str(self.board[x][y])
-					printable += ","
-			printable += "]\n"
+					printable += " "
+			printable += "\n"
 		print(printable)
 
 

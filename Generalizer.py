@@ -146,7 +146,9 @@ class Generalizer:
 		mu_values = []
 		for r in result:
 			mu_values.append(self.adjust_mu(r[0],r[1]))
-		self.mu = sum(mu_values)/len(mu_values)
+
+		if (mu_values):
+			self.mu = sum(mu_values)/len(mu_values)
 
 		games = [0, 0]
 		for r in result:
